@@ -1,0 +1,11 @@
+// HackScout — Prisma schema
+// Models (Event, City, User, SavedEvent, Registration, ScrapeLog) land in the next step.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
