@@ -10,7 +10,7 @@ todos:
     status: completed
   - id: schema-rest-models
     content: "User, SavedEvent, Registration, ScrapeLog + relations"
-    status: pending
+    status: completed
   - id: schema-migrate
     content: "prisma migrate against Supabase Postgres"
     status: pending

@@ -1,5 +1,4 @@
 // HackScout — Prisma schema
-// User, SavedEvent, Registration, and ScrapeLog land in the next chunk.
 
 generator client {
   provider = "prisma-client"
@@ -49,6 +48,12 @@ enum RegistrationType {
   native
 }
 
+enum ScrapeStatus {
+  success
+  failed
+  partial
+}
+
 model City {
   id         String  @id @default(cuid())
   slug       String  @unique
@@ -58,6 +63,50 @@ model City {
   eventCount Int     @default(0)
   isVirtual  Boolean @default(false)
   events     Event[]
+}
+
+model User {
+  id               String         @id
+  email            String         @unique
+  name             String?
+  preferredCityIds String[]       @default([])
+  createdAt        DateTime       @default(now())
+  savedEvents      SavedEvent[]
+  registrations    Registration[]
+}
+
+model SavedEvent {
+  userId    String
+  eventId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@id([userId, eventId])
+  @@index([eventId])
+}
+
+model Registration {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String?
+  payload   Json
+  createdAt DateTime @default(now())
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([eventId])
+  @@index([userId])
+}
+
+model ScrapeLog {
+  id          String      @id @default(cuid())
+  source      EventSource
+  startedAt   DateTime    @default(now())
+  finishedAt  DateTime?
+  status      ScrapeStatus
+  eventsFound Int         @default(0)
+  error       String?
 }
 
 model Event {
@@ -88,6 +137,8 @@ model Event {
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
   lastScrapedAt        DateTime?
+  savedEvents          SavedEvent[]
+  registrations        Registration[]
 
   @@index([cityId])
   @@index([registrationDeadline])
