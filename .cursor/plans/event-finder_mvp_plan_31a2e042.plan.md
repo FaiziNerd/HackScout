@@ -7,7 +7,7 @@ todos:
     status: completed
   - id: schema-city-event
     content: "City + Event models + enums in prisma/schema.prisma"
-    status: pending
+    status: completed
   - id: schema-rest-models
     content: "User, SavedEvent, Registration, ScrapeLog + relations"
     status: pending

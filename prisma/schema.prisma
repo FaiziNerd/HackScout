@@ -1,5 +1,5 @@
 // HackScout — Prisma schema
-// Models (Event, City, User, SavedEvent, Registration, ScrapeLog) land in the next step.
+// User, SavedEvent, Registration, and ScrapeLog land in the next chunk.
 
 generator client {
   provider = "prisma-client"
@@ -8,4 +8,88 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum EventCategory {
+  hackathon
+  conference
+  workshop
+  meetup
+  competition
+  seminar
+  career_fair
+  festival
+  other
+}
+
+enum EventSource {
+  devfolio
+  devpost
+  talentshowcase
+  eventbrite
+  luma
+  unstop
+  hackerearth
+  facebook
+  university
+  linkedin
+  instagram
+  community
+  admin
+}
+
+enum EventStatus {
+  upcoming
+  ongoing
+  closed
+}
+
+enum RegistrationType {
+  external
+  native
+}
+
+model City {
+  id         String  @id @default(cuid())
+  slug       String  @unique
+  name       String
+  province   String?
+  country    String  @default("Pakistan")
+  eventCount Int     @default(0)
+  isVirtual  Boolean @default(false)
+  events     Event[]
+}
+
+model Event {
+  id                   String           @id @default(cuid())
+  slug                 String           @unique
+  title                String
+  description          String
+  coverImage           String?
+  category             EventCategory
+  country              String           @default("Pakistan")
+  source               EventSource
+  sources              EventSource[]    @default([])
+  sourcePostUrl        String?
+  sourceUrl            String
+  startDate            DateTime
+  endDate              DateTime?
+  registrationDeadline DateTime?
+  cityId               String
+  city                 City             @relation(fields: [cityId], references: [id])
+  venue                String?
+  isOnline             Boolean          @default(false)
+  tags                 String[]         @default([])
+  prizePool            String?
+  organizerName        String?
+  registrationType     RegistrationType @default(external)
+  registrationUrl      String?
+  status               EventStatus      @default(upcoming)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  lastScrapedAt        DateTime?
+
+  @@index([cityId])
+  @@index([registrationDeadline])
+  @@index([status])
 }
