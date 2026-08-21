@@ -53,14 +53,17 @@ todos:
   - id: worker-cron
     content: 6-hour cron + worker process
     status: pending
+  - id: landing-page
+    content: Marketing landing at / with CTAs; app feed lives at /events
+    status: completed
   - id: feed-event-card
     content: Shared EventCard + city/category/deadline badges
     status: pending
   - id: feed-city-grid
-    content: Homepage city grid with counts from DB
+    content: App feed city grid with counts from DB (/events)
     status: pending
   - id: feed-nationwide
-    content: Nationwide feed + search/filters
+    content: Nationwide feed + search/filters on /events
     status: pending
   - id: city-listings
     content: Dynamic /cities/[slug] listings (deadline-sorted)
@@ -272,9 +275,15 @@ flowchart TB
 5. **Admin manual add** — aap khud events add karo jo kisi scraper se nahi mile
 6. **Your LinkedIn curation** — jo events aap already share karti ho, woh seed content
 
-### Homepage messaging
-- Hero: **"Har event, har shehar — Pakistan ka event hub"** (Every event, every city)
-- Live counter: **"247 events across 18 cities in Pakistan"**
+### Marketing landing (`/`)
+- Separate from the event feed: explain HackScout, then send people to browse
+- Hero: **"Har event, har shehar — Pakistan ka event hub"**
+- CTAs: Browse events (`/events`), Submit an event (`/submit`)
+- No login wall
+- Live event/city counts on the landing hero once seed + scrapers exist (until then static copy)
+
+### App homepage (`/events`)
+- Hero: live count — **"247 events across 18 cities in Pakistan"**
 - No paywall, no login wall — browse everything freely
 
 ---
@@ -488,7 +497,13 @@ Event {
 
 ## Core Features (MVP)
 
-### 1. Homepage — All Pakistan Events
+### 1. Marketing landing (`/`)
+- Pitch: every hackathon, conference, workshop, and meetup in Pakistan, listed by city
+- Problem: events are scattered across LinkedIn, Devfolio, Luma — deadlines get missed
+- How it works: browse by city → see deadlines → register (native or external)
+- Primary CTA to `/events`, secondary to `/submit`
+
+### 2. App feed — All Pakistan Events (`/events`)
 - **Hero**: live count — "X events across Y cities in Pakistan"
 - **City grid**: browse by city, but default feed below shows **all Pakistan events**
 - **"All Events in Pakistan"** nationwide feed, sorted by registration deadline
@@ -497,14 +512,14 @@ Event {
 - **"Missing an event? Add it"** prominent CTA
 - Search across all events nationwide
 
-### 2. City Pages (`/cities/karachi`, `/cities/lahore`, ...)
+### 3. City Pages (`/cities/karachi`, `/cities/lahore`, ...)
 - Dedicated page per city: "Events in Karachi" with live event count
 - Deadline-sorted event list for that city only
 - Sub-filters: category, deadline window, in-person vs online
 - Empty state: "No events in [city] yet — submit one or check Online events"
 - SEO title: "All Events in Karachi, Pakistan | HackScout"
 
-### 3. Event Detail Page
+### 4. Event Detail Page
 - Full description, dates, **city + venue** (linked to city page), organizer info
 - Prominent countdown to registration deadline
 - Registration CTA (native form OR tracked external link)
@@ -554,11 +569,13 @@ hackscout/
 │   └── schema.prisma          # Event, City, User, Registration models
 ├── src/
 │   ├── app/
-│   │   ├── page.tsx           # Homepage with city browser + event feed
+│   │   ├── page.tsx           # Marketing landing
+│   │   ├── events/
+│   │   │   ├── page.tsx       # Nationwide feed + city browser
+│   │   │   └── [slug]/        # Detail page
 │   │   ├── cities/
 │   │   │   ├── page.tsx       # All cities index
 │   │   │   └── [slug]/        # Per-city event listing
-│   │   ├── events/[slug]/     # Detail page
 │   │   ├── submit/            # Community submission
 │   │   ├── submit/linkedin/   # LinkedIn post quick-capture
 │   │   ├── admin/             # Moderation panel
