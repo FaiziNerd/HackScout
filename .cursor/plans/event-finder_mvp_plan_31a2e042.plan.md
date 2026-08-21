@@ -13,31 +13,31 @@ todos:
     status: completed
   - id: schema-migrate
     content: "prisma migrate against Supabase Postgres"
-    status: pending
+    status: completed
   - id: schema-seed-cities
     content: "Seed Pakistan cities + Online pseudo-city"
-    status: pending
+    status: completed
   - id: scrapers-types-normalizer
     content: Shared scraper types + city normalizer
-    status: pending
+    status: completed
   - id: scrapers-dedup
     content: Dedup helper wired to DB
-    status: pending
+    status: completed
   - id: scraper-devfolio
     content: Devfolio scraper
-    status: pending
+    status: completed
   - id: scraper-devpost
     content: Devpost scraper
-    status: pending
+    status: completed
   - id: scraper-talentshowcase
     content: TalentShowcase scraper
-    status: pending
+    status: completed
   - id: scraper-eventbrite
     content: Eventbrite scraper
     status: pending
   - id: scraper-luma
     content: Luma scraper
-    status: pending
+    status: completed
   - id: scraper-unstop
     content: Unstop scraper
     status: pending
@@ -58,16 +58,16 @@ todos:
     status: completed
   - id: feed-event-card
     content: Shared EventCard + city/category/deadline badges
-    status: pending
+    status: completed
   - id: feed-city-grid
     content: App feed city grid with counts from DB (/events)
-    status: pending
+    status: completed
   - id: feed-nationwide
     content: Nationwide feed + search/filters on /events
-    status: pending
+    status: completed
   - id: city-listings
     content: Dynamic /cities/[slug] listings (deadline-sorted)
-    status: pending
+    status: completed
   - id: city-counts
     content: City event counts on grid + empty states
     status: pending

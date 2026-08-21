@@ -1,16 +1,39 @@
 import type { Metadata } from "next";
 
+import { SiteHeader } from "@/components/site-header";
+import { SubmitEventForm, SubmitPageHero } from "@/components/submit-event-form";
+
 export const metadata: Metadata = {
-  title: "Submit an event",
+  title: "Submit an Event | HackScout",
+  description:
+    "Add your hackathon, developer meetup, or tech conference to HackScout's Pakistan directory.",
 };
 
 export default function SubmitPage() {
   return (
-    <main className="mx-auto max-w-5xl px-4 py-16">
-      <h1 className="text-3xl font-semibold tracking-tight">Submit an event</h1>
-      <p className="mt-2 text-muted-foreground">
-        Community submit form is scheduled after auth and native registration.
-      </p>
-    </main>
+    <div className="editorial-shell flex min-h-dvh flex-col bg-background text-foreground">
+      <SiteHeader />
+      <SubmitPageHero />
+      <main className="mx-auto grid w-full max-w-[1500px] flex-1 gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[16rem_1fr] lg:px-10 lg:py-16">
+        <aside className="h-fit border-y-2 border-foreground py-5 lg:sticky lg:top-24">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+            Filing notes
+          </p>
+          <ol className="mt-5 space-y-5">
+            {[
+              ["01", "Use the official event and registration links."],
+              ["02", "Include the final registration deadline."],
+              ["03", "The desk verifies each submission before publishing."],
+            ].map(([number, text]) => (
+              <li key={number} className="grid grid-cols-[2rem_1fr] gap-2 text-xs leading-relaxed">
+                <span className="font-mono text-[10px] text-muted-foreground">{number}</span>
+                <span>{text}</span>
+              </li>
+            ))}
+          </ol>
+        </aside>
+        <SubmitEventForm />
+      </main>
+    </div>
   );
 }

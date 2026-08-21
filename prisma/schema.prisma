@@ -54,6 +54,12 @@ enum ScrapeStatus {
   partial
 }
 
+enum ReviewStatus {
+  pending
+  approved
+  rejected
+}
+
 model City {
   id         String  @id @default(cuid())
   slug       String  @unique
@@ -134,6 +140,7 @@ model Event {
   registrationType     RegistrationType @default(external)
   registrationUrl      String?
   status               EventStatus      @default(upcoming)
+  reviewStatus         ReviewStatus     @default(approved)
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
   lastScrapedAt        DateTime?
@@ -143,4 +150,5 @@ model Event {
   @@index([cityId])
   @@index([registrationDeadline])
   @@index([status])
+  @@index([reviewStatus])
 }

@@ -1,27 +1,32 @@
-export type CitySeed = {
-  slug: string;
-  name: string;
-  province?: string;
-  country?: string;
-  isVirtual: boolean;
-};
+import "dotenv/config";
+import pg from "pg";
 
-export const PAKISTAN_CITIES: CitySeed[] = [
-  // Online / Virtual first-class pseudo-city
-  { slug: "online", name: "Online / Virtual", province: undefined, country: "Pakistan", isVirtual: true },
+const rawConnectionString = process.env.DIRECT_URL || process.env.DATABASE_URL;
 
-  // Federal Capital
+if (!rawConnectionString) {
+  throw new Error("Neither DIRECT_URL nor DATABASE_URL is set");
+}
+
+const parsedUrl = new URL(rawConnectionString);
+
+const pool = new pg.Pool({
+  user: decodeURIComponent(parsedUrl.username),
+  password: decodeURIComponent(parsedUrl.password),
+  host: parsedUrl.hostname,
+  port: parsedUrl.port ? parseInt(parsedUrl.port, 10) : 5432,
+  database: parsedUrl.pathname.replace(/^\//, "") || "postgres",
+  ssl: { rejectUnauthorized: false },
+});
+
+const PAKISTAN_CITIES = [
+  { slug: "online", name: "Online / Virtual", province: null, country: "Pakistan", isVirtual: true },
   { slug: "islamabad", name: "Islamabad", province: "Federal Capital", country: "Pakistan", isVirtual: false },
-
-  // Sindh
   { slug: "karachi", name: "Karachi", province: "Sindh", country: "Pakistan", isVirtual: false },
   { slug: "hyderabad", name: "Hyderabad", province: "Sindh", country: "Pakistan", isVirtual: false },
   { slug: "sukkur", name: "Sukkur", province: "Sindh", country: "Pakistan", isVirtual: false },
   { slug: "larkana", name: "Larkana", province: "Sindh", country: "Pakistan", isVirtual: false },
   { slug: "nawabshah", name: "Nawabshah", province: "Sindh", country: "Pakistan", isVirtual: false },
   { slug: "mirpur-khas", name: "Mirpur Khas", province: "Sindh", country: "Pakistan", isVirtual: false },
-
-  // Punjab
   { slug: "lahore", name: "Lahore", province: "Punjab", country: "Pakistan", isVirtual: false },
   { slug: "rawalpindi", name: "Rawalpindi", province: "Punjab", country: "Pakistan", isVirtual: false },
   { slug: "faisalabad", name: "Faisalabad", province: "Punjab", country: "Pakistan", isVirtual: false },
@@ -37,8 +42,6 @@ export const PAKISTAN_CITIES: CitySeed[] = [
   { slug: "okara", name: "Okara", province: "Punjab", country: "Pakistan", isVirtual: false },
   { slug: "wah-cantt", name: "Wah Cantt", province: "Punjab", country: "Pakistan", isVirtual: false },
   { slug: "taxila", name: "Taxila", province: "Punjab", country: "Pakistan", isVirtual: false },
-
-  // Khyber Pakhtunkhwa (KPK)
   { slug: "peshawar", name: "Peshawar", province: "Khyber Pakhtunkhwa", country: "Pakistan", isVirtual: false },
   { slug: "abbottabad", name: "Abbottabad", province: "Khyber Pakhtunkhwa", country: "Pakistan", isVirtual: false },
   { slug: "mardan", name: "Mardan", province: "Khyber Pakhtunkhwa", country: "Pakistan", isVirtual: false },
@@ -47,93 +50,52 @@ export const PAKISTAN_CITIES: CitySeed[] = [
   { slug: "kohat", name: "Kohat", province: "Khyber Pakhtunkhwa", country: "Pakistan", isVirtual: false },
   { slug: "dera-ismail-khan", name: "Dera Ismail Khan", province: "Khyber Pakhtunkhwa", country: "Pakistan", isVirtual: false },
   { slug: "haripur", name: "Haripur", province: "Khyber Pakhtunkhwa", country: "Pakistan", isVirtual: false },
-
-  // Balochistan
   { slug: "quetta", name: "Quetta", province: "Balochistan", country: "Pakistan", isVirtual: false },
   { slug: "gwadar", name: "Gwadar", province: "Balochistan", country: "Pakistan", isVirtual: false },
   { slug: "turbat", name: "Turbat", province: "Balochistan", country: "Pakistan", isVirtual: false },
   { slug: "khuzdar", name: "Khuzdar", province: "Balochistan", country: "Pakistan", isVirtual: false },
-
-  // Azad Jammu & Kashmir (AJK)
   { slug: "muzaffarabad", name: "Muzaffarabad", province: "Azad Kashmir", country: "Pakistan", isVirtual: false },
   { slug: "mirpur-ajk", name: "Mirpur", province: "Azad Kashmir", country: "Pakistan", isVirtual: false },
   { slug: "rawalakot", name: "Rawalakot", province: "Azad Kashmir", country: "Pakistan", isVirtual: false },
-
-  // Gilgit-Baltistan (GB)
   { slug: "gilgit", name: "Gilgit", province: "Gilgit-Baltistan", country: "Pakistan", isVirtual: false },
   { slug: "skardu", name: "Skardu", province: "Gilgit-Baltistan", country: "Pakistan", isVirtual: false },
   { slug: "hunza", name: "Hunza", province: "Gilgit-Baltistan", country: "Pakistan", isVirtual: false },
 ];
 
-/**
- * Mapping of abbreviations and alternative strings to canonical city slugs.
- */
-const CITY_ALIASES: Record<string, string> = {
-  khi: "karachi",
-  "karachi, sindh": "karachi",
-  "karachi pakistan": "karachi",
-  lhe: "lahore",
-  "lahore, punjab": "lahore",
-  "lahore pakistan": "lahore",
-  isb: "islamabad",
-  "islamabad federal": "islamabad",
-  "islamabad pakistan": "islamabad",
-  "islamabad, pakistan": "islamabad",
-  rwp: "rawalpindi",
-  pindi: "rawalpindi",
-  "rawalpindi pakistan": "rawalpindi",
-  pesh: "peshawar",
-  "peshawar kpk": "peshawar",
-  "peshawar pakistan": "peshawar",
-  qta: "quetta",
-  "quetta balochistan": "quetta",
-  hyd: "hyderabad",
-  "hyderabad sindh": "hyderabad",
-  fsd: "faisalabad",
-  "faisalabad punjab": "faisalabad",
-  mul: "multan",
-  giki: "topi",
-  topi: "topi",
-  online: "online",
-  virtual: "online",
-  remote: "online",
-  webinar: "online",
-  zoom: "online",
-};
-
-/**
- * Normalize raw location/city strings into a matching CitySeed or slug.
- */
-export function normalizeCity(rawLocation: string): { slug: string; matched: boolean } {
-  if (!rawLocation) return { slug: "online", matched: false };
-  const clean = rawLocation.trim().toLowerCase();
-
-  if (CITY_ALIASES[clean]) {
-    return { slug: CITY_ALIASES[clean], matched: true };
-  }
-
-  // Check direct slug or name match
-  for (const city of PAKISTAN_CITIES) {
-    if (
-      clean === city.slug ||
-      clean === city.name.toLowerCase() ||
-      clean.includes(city.name.toLowerCase()) ||
-      clean.includes(city.slug)
-    ) {
-      return { slug: city.slug, matched: true };
-    }
-  }
-
-  // Check if it denotes remote / online
-  if (
-    clean.includes("online") ||
-    clean.includes("virtual") ||
-    clean.includes("remote") ||
-    clean.includes("zoom") ||
-    clean.includes("meet")
-  ) {
-    return { slug: "online", matched: true };
-  }
-
-  return { slug: "karachi", matched: false };
+function generateCuid() {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 10);
+  return `c${timestamp}${random}`;
 }
+
+async function main() {
+  console.log(`Seeding ${PAKISTAN_CITIES.length} Pakistan cities + Online...`);
+
+  for (const city of PAKISTAN_CITIES) {
+    const id = generateCuid();
+    await pool.query(
+      `
+      INSERT INTO "City" ("id", "slug", "name", "province", "country", "eventCount", "isVirtual")
+      VALUES ($1, $2, $3, $4, $5, 0, $6)
+      ON CONFLICT ("slug") DO UPDATE SET
+        "name" = EXCLUDED."name",
+        "province" = EXCLUDED."province",
+        "country" = EXCLUDED."country",
+        "isVirtual" = EXCLUDED."isVirtual";
+      `,
+      [id, city.slug, city.name, city.province, city.country, city.isVirtual]
+    );
+  }
+
+  const res = await pool.query(`SELECT count(*) FROM "City";`);
+  console.log(`Seeding complete. Total cities in database: ${res.rows[0].count}`);
+}
+
+main()
+  .catch((e) => {
+    console.error("Error while seeding database:", e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await pool.end();
+  });
