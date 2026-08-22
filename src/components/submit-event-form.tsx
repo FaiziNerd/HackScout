@@ -1,11 +1,12 @@
 "use client";
 
-import { ArrowRight, CheckCircle, PaperPlaneTilt, WarningCircle } from "@phosphor-icons/react";
-import { useState } from "react";
+import { ArrowRight, CheckCircle, MagnifyingGlass, PaperPlaneTilt, WarningCircle } from "@phosphor-icons/react";
+import { useMemo, useState } from "react";
 
+import { FormFieldBuilder } from "@/components/form-field-builder";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PAKISTAN_CITIES } from "@/lib/cities";
+import { DEFAULT_REGISTRATION_FIELDS, type RegistrationFormField } from "@/lib/registration-form";
 
 const labelClass =
   "block font-mono text-[10px] font-semibold uppercase tracking-[0.13em] text-foreground";
@@ -14,9 +15,32 @@ const fieldClass =
 const selectClass =
   "mt-2 h-12 w-full rounded-none border-2 border-foreground bg-card px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/30";
 
-export function SubmitEventForm() {
+export type SubmitCityOption = {
+  slug: string;
+  name: string;
+  province?: string | null;
+  isVirtual?: boolean;
+};
+
+export function SubmitEventForm({ cities }: { cities: SubmitCityOption[] }) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [registrationType, setRegistrationType] = useState<"external" | "native">("external");
+  const [formFields, setFormFields] = useState<RegistrationFormField[]>(DEFAULT_REGISTRATION_FIELDS);
+  const [citySlug, setCitySlug] = useState(cities.find((city) => city.slug === "karachi")?.slug || cities[0]?.slug || "online");
+  const [cityQuery, setCityQuery] = useState("");
+  const [cityOpen, setCityOpen] = useState(false);
+
+  const filteredCities = useMemo(() => {
+    const query = cityQuery.trim().toLowerCase();
+    if (!query) return cities;
+    return cities.filter((city) => {
+      const haystack = `${city.name} ${city.province ?? ""} ${city.slug}`.toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [cities, cityQuery]);
+
+  const selectedCity = cities.find((city) => city.slug === citySlug);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -29,13 +53,17 @@ export function SubmitEventForm() {
       title: String(formData.get("title") || ""),
       organizerName: String(formData.get("organizerName") || ""),
       category: String(formData.get("category") || "hackathon"),
-      citySlug: String(formData.get("citySlug") || "karachi"),
+      citySlug,
+      customCityName: String(formData.get("customCityName") || "") || undefined,
       venue: String(formData.get("venue") || "") || undefined,
+      prizePool: String(formData.get("prizePool") || "") || undefined,
       startDate: String(formData.get("startDate") || ""),
       endDate: String(formData.get("endDate") || "") || undefined,
       registrationDeadline: String(formData.get("registrationDeadline") || ""),
+      registrationType,
       registrationUrl: String(formData.get("registrationUrl") || ""),
-      description: String(formData.get("description") || "") || "Community submitted event",
+      formFields: registrationType === "native" ? formFields : undefined,
+      description: String(formData.get("description") || ""),
     };
 
     try {
@@ -50,6 +78,9 @@ export function SubmitEventForm() {
       setStatus("success");
       setMessage(data.message);
       form.reset();
+      setRegistrationType("external");
+      setFormFields(DEFAULT_REGISTRATION_FIELDS);
+      setCityQuery("");
     } catch (error) {
       setStatus("error");
       setMessage(error instanceof Error ? error.message : "Submit failed");
@@ -87,6 +118,7 @@ export function SubmitEventForm() {
               name="title"
               type="text"
               required
+              minLength={3}
               placeholder="FAST National Hackathon 2026"
               className={fieldClass}
             />
@@ -127,16 +159,89 @@ export function SubmitEventForm() {
         <fieldset className="grid gap-5 p-5 sm:grid-cols-2 sm:p-7">
           <legend className="sr-only">Location</legend>
           <div>
-            <label htmlFor="citySlug" className={labelClass}>
+            <label htmlFor="citySearch" className={labelClass}>
               04 / City or location <span className="text-primary">*</span>
             </label>
-            <select id="citySlug" name="citySlug" required className={selectClass}>
-              {PAKISTAN_CITIES.map((city) => (
-                <option key={city.slug} value={city.slug}>
-                  {city.name} {city.province ? `(${city.province})` : ""}
-                </option>
-              ))}
-            </select>
+            <div className="relative mt-2">
+              <MagnifyingGlass className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                id="citySearch"
+                type="search"
+                autoComplete="off"
+                value={
+                  cityOpen
+                    ? cityQuery
+                    : citySlug === "other"
+                      ? "City not listed"
+                      : selectedCity
+                        ? cityLabel(selectedCity)
+                        : cityQuery
+                }
+                onChange={(event) => {
+                  setCityQuery(event.target.value);
+                  setCityOpen(true);
+                }}
+                onFocus={() => {
+                  setCityOpen(true);
+                  setCityQuery("");
+                }}
+                onBlur={() => {
+                  window.setTimeout(() => setCityOpen(false), 120);
+                }}
+                placeholder="Search Karachi, Lahore, Online…"
+                className="h-12 w-full rounded-none border-2 border-foreground bg-card pr-3 pl-10 text-sm outline-none focus:border-primary"
+              />
+              {cityOpen ? (
+                <ul className="absolute z-20 mt-1 max-h-56 w-full overflow-auto border-2 border-foreground bg-card">
+                  {filteredCities.map((city) => (
+                    <li key={city.slug}>
+                      <button
+                        type="button"
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => {
+                          setCitySlug(city.slug);
+                          setCityQuery("");
+                          setCityOpen(false);
+                        }}
+                      >
+                        {cityLabel(city)}
+                      </button>
+                    </li>
+                  ))}
+                  <li>
+                    <button
+                      type="button"
+                      className="w-full border-t border-foreground px-3 py-2 text-left text-sm font-semibold hover:bg-muted"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        setCitySlug("other");
+                        setCityQuery("");
+                        setCityOpen(false);
+                      }}
+                    >
+                      City not listed
+                    </button>
+                  </li>
+                </ul>
+              ) : null}
+            </div>
+            {citySlug === "other" ? (
+              <div className="mt-4">
+                <label htmlFor="customCityName" className={labelClass}>
+                  City name <span className="text-primary">*</span>
+                </label>
+                <Input
+                  id="customCityName"
+                  name="customCityName"
+                  type="text"
+                  required
+                  minLength={2}
+                  placeholder="Gilgit / Jhang / Chitral"
+                  className={fieldClass}
+                />
+              </div>
+            ) : null}
           </div>
           <div>
             <label htmlFor="venue" className={labelClass}>
@@ -183,25 +288,80 @@ export function SubmitEventForm() {
         <fieldset className="grid gap-5 p-5 sm:p-7">
           <legend className="sr-only">Registration details</legend>
           <div>
-            <label htmlFor="registrationUrl" className={labelClass}>
-              09 / Official registration URL <span className="text-primary">*</span>
+            <p className={labelClass}>
+              09 / How people register <span className="text-primary">*</span>
+            </p>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {(
+                [
+                  ["external", "External link", "Send people to Devfolio, Luma or a Google Form."],
+                  ["native", "HackScout form", "Build questions here. Submissions stay in your table."],
+                ] as const
+              ).map(([value, title, hint]) => (
+                <label
+                  key={value}
+                  className={`cursor-pointer border-2 p-4 ${
+                    registrationType === value ? "border-primary bg-muted" : "border-foreground"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="registrationType"
+                    value={value}
+                    checked={registrationType === value}
+                    onChange={() => setRegistrationType(value)}
+                    className="sr-only"
+                  />
+                  <span className="block text-sm font-semibold">{title}</span>
+                  <span className="mt-1 block text-xs text-muted-foreground">{hint}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          {registrationType === "external" ? (
+            <div>
+              <label htmlFor="registrationUrl" className={labelClass}>
+                Official registration URL <span className="text-primary">*</span>
+              </label>
+              <Input
+                id="registrationUrl"
+                name="registrationUrl"
+                type="url"
+                required
+                placeholder="https://forms.gle/... or https://lu.ma/..."
+                className={fieldClass}
+              />
+            </div>
+          ) : (
+            <div>
+              <p className={labelClass}>Signup questions</p>
+              <p className="mt-1 mb-3 text-xs text-muted-foreground">
+                Name and email stay required. Add university, team, GitHub or your own prompts.
+              </p>
+              <FormFieldBuilder fields={formFields} onChange={setFormFields} />
+            </div>
+          )}
+          <div>
+            <label htmlFor="prizePool" className={labelClass}>
+              Prize pool
             </label>
             <Input
-              id="registrationUrl"
-              name="registrationUrl"
-              type="url"
-              required
-              placeholder="https://forms.gle/... or https://lu.ma/..."
+              id="prizePool"
+              name="prizePool"
+              type="text"
+              placeholder="PKR 500,000 / internships / swag"
               className={fieldClass}
             />
           </div>
           <div>
             <label htmlFor="description" className={labelClass}>
-              10 / Field notes
+              10 / What happens at this event <span className="text-primary">*</span>
             </label>
             <textarea
               id="description"
               name="description"
+              required
+              minLength={20}
               rows={5}
               placeholder="Tracks, prize pool, team size, eligibility and anything applicants should know…"
               className="mt-2 w-full resize-y rounded-none border-2 border-foreground bg-card p-3 text-base outline-none placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/30 md:text-sm"
@@ -247,6 +407,10 @@ export function SubmitEventForm() {
       </form>
     </section>
   );
+}
+
+function cityLabel(city: SubmitCityOption) {
+  return `${city.name}${city.province ? ` (${city.province})` : ""}`;
 }
 
 export function SubmitPageHero() {

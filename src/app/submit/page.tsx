@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 import { SiteHeader } from "@/components/site-header";
 import { SubmitEventForm, SubmitPageHero } from "@/components/submit-event-form";
+import { PAKISTAN_CITIES } from "@/lib/cities";
+import { prisma } from "@/lib/db";
 
 export const metadata: Metadata = {
   title: "Submit an Event | HackScout",
@@ -9,7 +11,14 @@ export const metadata: Metadata = {
     "Add your hackathon, developer meetup, or tech conference to HackScout's Pakistan directory.",
 };
 
-export default function SubmitPage() {
+export default async function SubmitPage() {
+  const cities = await prisma.city.findMany({
+    select: { slug: true, name: true, province: true, isVirtual: true },
+    orderBy: [{ isVirtual: "desc" }, { name: "asc" }],
+  });
+
+  const options = cities.length > 0 ? cities : PAKISTAN_CITIES;
+
   return (
     <div className="editorial-shell flex min-h-dvh flex-col bg-background text-foreground">
       <SiteHeader />
@@ -32,7 +41,7 @@ export default function SubmitPage() {
             ))}
           </ol>
         </aside>
-        <SubmitEventForm />
+        <SubmitEventForm cities={options} />
       </main>
     </div>
   );
