@@ -4,6 +4,7 @@ import { ArrowUpRight, Crosshair, Globe, MapPin } from "@phosphor-icons/react/di
 
 import { SiteHeader } from "@/components/site-header";
 import { PAKISTAN_CITIES } from "@/lib/cities";
+import { getAllCityEventCounts } from "@/lib/events";
 
 export const metadata: Metadata = {
   title: "Cities Directory | HackScout",
@@ -13,19 +14,19 @@ export const metadata: Metadata = {
 
 const cityHighlights: Record<
   string,
-  { events: number; tag: string; activeHackathons: string }
+  { tag: string; activeHackathons: string }
 > = {
-  karachi: { events: 18, tag: "Coastal Mega Hub", activeHackathons: "FAST, NED, IBA, TechJuice" },
-  lahore: { events: 14, tag: "Startup & Dev Valley", activeHackathons: "LUMS, FAST, ITU, PUCIT" },
-  islamabad: { events: 9, tag: "Federal AI & DeepTech", activeHackathons: "NUST, FAST, COMSATS" },
-  rawalpindi: { events: 5, tag: "Twin Cities Circuit", activeHackathons: "Cyber & Security Sprints" },
-  topi: { events: 4, tag: "GIKI Tech Oasis", activeHackathons: "ACM All-Pakistan Olympiad" },
-  faisalabad: { events: 4, tag: "Industrial Tech Center", activeHackathons: "AgriTech & Youth Summits" },
-  peshawar: { events: 3, tag: "Frontier Tech Hub", activeHackathons: "UET Peshawar, IM|Sciences" },
-  multan: { events: 3, tag: "South Punjab Devs", activeHackathons: "Bahauddin Zakariya Univ" },
-  quetta: { events: 2, tag: "Balochistan Tech Hub", activeHackathons: "BUITEMS & UOB Hack" },
-  hyderabad: { events: 2, tag: "Sindh Univ Circuit", activeHackathons: "Mehran UET Circuit" },
-  online: { events: 24, tag: "Nationwide Digital", activeHackathons: "Virtual Hackathons & Global" },
+  karachi: { tag: "Coastal Mega Hub", activeHackathons: "FAST, NED, IBA, TechJuice" },
+  lahore: { tag: "Startup & Dev Valley", activeHackathons: "LUMS, FAST, ITU, PUCIT" },
+  islamabad: { tag: "Federal AI & DeepTech", activeHackathons: "NUST, FAST, COMSATS" },
+  rawalpindi: { tag: "Twin Cities Circuit", activeHackathons: "Cyber & Security Sprints" },
+  topi: { tag: "GIKI Tech Oasis", activeHackathons: "ACM All-Pakistan Olympiad" },
+  faisalabad: { tag: "Industrial Tech Center", activeHackathons: "AgriTech & Youth Summits" },
+  peshawar: { tag: "Frontier Tech Hub", activeHackathons: "UET Peshawar, IM|Sciences" },
+  multan: { tag: "South Punjab Devs", activeHackathons: "Bahauddin Zakariya Univ" },
+  quetta: { tag: "Balochistan Tech Hub", activeHackathons: "BUITEMS & UOB Hack" },
+  hyderabad: { tag: "Sindh Univ Circuit", activeHackathons: "Mehran UET Circuit" },
+  online: { tag: "Nationwide Digital", activeHackathons: "Virtual Hackathons & Global" },
 };
 
 const provinces = [
@@ -36,9 +37,12 @@ const provinces = [
   { code: "05", name: "Balochistan & Northern Regions", keys: ["quetta", "gwadar", "muzaffarabad", "gilgit"] },
 ];
 
-export default function CitiesPage() {
+export default async function CitiesPage() {
+  const cityEventCounts = await getAllCityEventCounts();
   const listedCities = provinces.reduce((total, province) => total + province.keys.length, 0);
-  const activeEvents = Object.values(cityHighlights).reduce((total, city) => total + city.events, 0);
+  const activeEvents = provinces
+    .flatMap((province) => province.keys)
+    .reduce((total, slug) => total + (cityEventCounts.get(slug) ?? 0), 0);
 
   return (
     <div className="editorial-shell flex min-h-dvh flex-col bg-background text-foreground">
@@ -86,7 +90,7 @@ export default function CitiesPage() {
                 <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-background/60">
                   Indexed events
                 </dt>
-                <dd className="font-heading text-6xl text-primary-foreground">{activeEvents}+</dd>
+                <dd className="font-heading text-6xl text-primary-foreground">{activeEvents}</dd>
               </div>
             </dl>
             <p className="mt-8 font-mono text-[9px] uppercase leading-relaxed tracking-[0.13em] text-background/55">
@@ -131,12 +135,13 @@ export default function CitiesPage() {
                 {province.keys.map((slug, index) => {
                   const cityMeta = PAKISTAN_CITIES.find((city) => city.slug === slug);
                   const info = cityHighlights[slug] || {
-                    events: 1,
                     tag: "Active Tech Community",
                     activeHackathons: "Meetups & Workshops",
                   };
                   const name = cityMeta ? cityMeta.name : slug.charAt(0).toUpperCase() + slug.slice(1);
                   const isOnline = slug === "online";
+                  const eventCount = cityEventCounts.get(slug) ?? 0;
+                  const isEmpty = eventCount === 0;
 
                   return (
                     <article
@@ -170,21 +175,23 @@ export default function CitiesPage() {
                               {name}
                             </h3>
                             <p className="mt-3 max-w-[30ch] text-xs leading-relaxed text-muted-foreground">
-                              {info.activeHackathons}
+                              {isEmpty
+                                ? "No open listings right now. This desk is ready for the next community dispatch."
+                                : info.activeHackathons}
                             </p>
                           </div>
 
                           <div className="mt-6 flex items-end justify-between border-t border-foreground/40 pt-4">
                             <div>
                               <span className="block font-heading text-4xl font-semibold text-primary">
-                                {info.events}
+                                {eventCount}
                               </span>
                               <span className="font-mono text-[8px] uppercase tracking-[0.13em] text-muted-foreground">
-                                Open {info.events === 1 ? "event" : "events"}
+                                {isEmpty ? "Awaiting listings" : `Open ${eventCount === 1 ? "event" : "events"}`}
                               </span>
                             </div>
                             <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.1em]">
-                              Open desk
+                              {isEmpty ? "View empty desk" : "Open desk"}
                               <ArrowUpRight
                                 aria-hidden
                                 className="size-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"

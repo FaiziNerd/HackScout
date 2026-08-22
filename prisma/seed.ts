@@ -87,8 +87,144 @@ async function main() {
     );
   }
 
-  const res = await pool.query(`SELECT count(*) FROM "City";`);
-  console.log(`Seeding complete. Total cities in database: ${res.rows[0].count}`);
+  const SAMPLE_EVENTS = [
+    {
+      slug: "karachi-ai-hackathon-2026",
+      title: "Karachi AI Hackathon 2026",
+      description:
+        "A 36-hour build sprint for students and early-career engineers in Karachi. Form a team, ship a working prototype, and demo it to local mentors before registration closes.",
+      category: "hackathon",
+      source: "admin",
+      sourceUrl: "https://devfolio.co",
+      registrationUrl: "https://devfolio.co",
+      startDate: "2026-09-12T09:00:00+05:00",
+      endDate: "2026-09-13T18:00:00+05:00",
+      registrationDeadline: "2026-09-05T23:59:00+05:00",
+      citySlug: "karachi",
+      venue: "IBA City Campus",
+      isOnline: false,
+      tags: ["ai", "students"],
+      prizePool: "PKR 250,000",
+      organizerName: "GDG Karachi",
+    },
+    {
+      slug: "lahore-builders-meetup-2026",
+      title: "Lahore Builders Meetup",
+      description:
+        "An evening meetup for product, design, and engineering folks in Lahore. Talks on shipping student products, plus open networking after the last session.",
+      category: "meetup",
+      source: "luma",
+      sourceUrl: "https://lu.ma",
+      registrationUrl: "https://lu.ma",
+      startDate: "2026-09-03T18:30:00+05:00",
+      endDate: "2026-09-03T21:00:00+05:00",
+      registrationDeadline: "2026-09-02T18:00:00+05:00",
+      citySlug: "lahore",
+      venue: "Plan9, Arfa Tower",
+      isOnline: false,
+      tags: ["community", "networking"],
+      prizePool: null,
+      organizerName: "Lahore.dev",
+    },
+    {
+      slug: "islamabad-product-workshop-2026",
+      title: "Islamabad Product Workshop",
+      description:
+        "A half-day workshop on scoping a hackathon idea, writing a one-pager, and presenting a demo without a slide deck overload.",
+      category: "workshop",
+      source: "eventbrite",
+      sourceUrl: "https://www.eventbrite.com",
+      registrationUrl: "https://www.eventbrite.com",
+      startDate: "2026-09-20T10:00:00+05:00",
+      endDate: "2026-09-20T14:00:00+05:00",
+      registrationDeadline: "2026-09-18T12:00:00+05:00",
+      citySlug: "islamabad",
+      venue: "NUST SEECS",
+      isOnline: false,
+      tags: ["product", "workshop"],
+      prizePool: null,
+      organizerName: "NUST ACM",
+    },
+    {
+      slug: "pakistan-open-source-sprint-2026",
+      title: "Pakistan Open Source Sprint",
+      description:
+        "A nationwide online sprint for contributors. Pick an issue, pair with a mentor, and submit a pull request before the weekend cutoff.",
+      category: "competition",
+      source: "devpost",
+      sourceUrl: "https://devpost.com",
+      registrationUrl: "https://devpost.com",
+      startDate: "2026-09-26T10:00:00+05:00",
+      endDate: "2026-09-27T20:00:00+05:00",
+      registrationDeadline: "2026-09-24T23:59:00+05:00",
+      citySlug: "online",
+      venue: null,
+      isOnline: true,
+      tags: ["opensource", "remote"],
+      prizePool: "$1,000",
+      organizerName: "HackScout",
+    },
+  ];
+
+  console.log(`Seeding ${SAMPLE_EVENTS.length} sample events...`);
+
+  for (const event of SAMPLE_EVENTS) {
+    const city = await pool.query(`SELECT id FROM "City" WHERE slug = $1 LIMIT 1`, [event.citySlug]);
+    const cityId = city.rows[0]?.id;
+    if (!cityId) {
+      throw new Error(`Missing city for sample event: ${event.citySlug}`);
+    }
+
+    await pool.query(
+      `
+      INSERT INTO "Event" (
+        "id", "slug", "title", "description", "category", "country", "source", "sources",
+        "sourceUrl", "startDate", "endDate", "registrationDeadline", "cityId", "venue",
+        "isOnline", "tags", "prizePool", "organizerName", "registrationType", "registrationUrl",
+        "status", "reviewStatus", "createdAt", "updatedAt"
+      )
+      VALUES (
+        $1, $2, $3, $4, $5::"EventCategory", 'Pakistan', $6::"EventSource", ARRAY[$6]::"EventSource"[],
+        $7, $8::timestamptz, $9::timestamptz, $10::timestamptz, $11, $12,
+        $13, $14::text[], $15, $16, 'external'::"RegistrationType", $17,
+        'upcoming'::"EventStatus", 'approved'::"ReviewStatus", NOW(), NOW()
+      )
+      ON CONFLICT ("slug") DO UPDATE SET
+        "title" = EXCLUDED."title",
+        "description" = EXCLUDED."description",
+        "registrationDeadline" = EXCLUDED."registrationDeadline",
+        "registrationUrl" = EXCLUDED."registrationUrl",
+        "status" = 'upcoming'::"EventStatus",
+        "reviewStatus" = 'approved'::"ReviewStatus",
+        "updatedAt" = NOW();
+      `,
+      [
+        generateCuid(),
+        event.slug,
+        event.title,
+        event.description,
+        event.category,
+        event.source,
+        event.sourceUrl,
+        event.startDate,
+        event.endDate,
+        event.registrationDeadline,
+        cityId,
+        event.venue,
+        event.isOnline,
+        event.tags,
+        event.prizePool,
+        event.organizerName,
+        event.registrationUrl,
+      ]
+    );
+  }
+
+  const [cities, events] = await Promise.all([
+    pool.query(`SELECT count(*) FROM "City";`),
+    pool.query(`SELECT count(*) FROM "Event" WHERE "reviewStatus" = 'approved';`),
+  ]);
+  console.log(`Seeding complete. Cities: ${cities.rows[0].count}. Approved events: ${events.rows[0].count}.`);
 }
 
 main()

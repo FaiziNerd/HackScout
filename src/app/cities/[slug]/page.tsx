@@ -5,8 +5,10 @@ import { notFound } from "next/navigation";
 
 import { EventCard } from "@/components/event-card";
 import { SiteHeader } from "@/components/site-header";
+import { getAuthUser } from "@/lib/auth";
 import { PAKISTAN_CITIES } from "@/lib/cities";
 import { getCityBySlug, getUpcomingEvents } from "@/lib/events";
+import { getSavedEventIds } from "@/lib/saved-events";
 
 interface CityPageProps {
   params: Promise<{ slug: string }>;
@@ -35,7 +37,12 @@ export async function generateMetadata({ params }: CityPageProps): Promise<Metad
 export default async function CityListingsPage({ params }: CityPageProps) {
   const { slug } = await params;
 
-  const [city, events] = await Promise.all([getCityBySlug(slug), getUpcomingEvents({ city: slug })]);
+  const [city, events, user] = await Promise.all([
+    getCityBySlug(slug),
+    getUpcomingEvents({ city: slug }),
+    getAuthUser(),
+  ]);
+  const savedIds = user ? await getSavedEventIds(user.id) : new Set<string>();
   const fallbackCity = PAKISTAN_CITIES.find((item) => item.slug === slug);
 
   if (!city && !fallbackCity) {
@@ -127,7 +134,13 @@ export default async function CityListingsPage({ params }: CityPageProps) {
         ) : (
           <div className="grid border-l border-t border-foreground md:grid-cols-2 xl:grid-cols-3">
             {events.map((event, index) => (
-              <EventCard key={event.id} event={event} index={index + 1} />
+              <EventCard
+                key={event.id}
+                event={event}
+                index={index + 1}
+                saved={savedIds.has(event.id)}
+                signedIn={Boolean(user)}
+              />
             ))}
           </div>
         )}
