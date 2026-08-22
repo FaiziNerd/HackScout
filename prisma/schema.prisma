@@ -60,6 +60,11 @@ enum ReviewStatus {
   rejected
 }
 
+enum ReminderStatus {
+  pending
+  sent
+}
+
 model City {
   id         String  @id @default(cuid())
   slug       String  @unique
@@ -72,13 +77,14 @@ model City {
 }
 
 model User {
-  id               String         @id
-  email            String         @unique
-  name             String?
-  preferredCityIds String[]       @default([])
-  createdAt        DateTime       @default(now())
-  savedEvents      SavedEvent[]
-  registrations    Registration[]
+  id                String             @id
+  email             String             @unique
+  name              String?
+  preferredCityIds  String[]           @default([])
+  createdAt         DateTime           @default(now())
+  savedEvents       SavedEvent[]
+  registrations     Registration[]
+  deadlineReminders DeadlineReminder[]
 }
 
 model SavedEvent {
@@ -96,59 +102,81 @@ model Registration {
   id        String   @id @default(cuid())
   eventId   String
   userId    String?
+  email     String
   payload   Json
   createdAt DateTime @default(now())
   event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+  @@unique([eventId, email])
   @@index([eventId])
   @@index([userId])
 }
 
 model ScrapeLog {
-  id          String      @id @default(cuid())
+  id          String       @id @default(cuid())
   source      EventSource
-  startedAt   DateTime    @default(now())
+  startedAt   DateTime     @default(now())
   finishedAt  DateTime?
   status      ScrapeStatus
-  eventsFound Int         @default(0)
+  eventsFound Int          @default(0)
   error       String?
 }
 
 model Event {
-  id                   String           @id @default(cuid())
-  slug                 String           @unique
+  id                   String             @id @default(cuid())
+  slug                 String             @unique
   title                String
   description          String
   coverImage           String?
   category             EventCategory
-  country              String           @default("Pakistan")
+  country              String             @default("Pakistan")
   source               EventSource
-  sources              EventSource[]    @default([])
+  sources              EventSource[]      @default([])
   sourcePostUrl        String?
   sourceUrl            String
   startDate            DateTime
   endDate              DateTime?
   registrationDeadline DateTime?
   cityId               String
-  city                 City             @relation(fields: [cityId], references: [id])
+  city                 City               @relation(fields: [cityId], references: [id])
   venue                String?
-  isOnline             Boolean          @default(false)
-  tags                 String[]         @default([])
+  isOnline             Boolean            @default(false)
+  tags                 String[]           @default([])
   prizePool            String?
   organizerName        String?
-  registrationType     RegistrationType @default(external)
+  registrationType     RegistrationType   @default(external)
   registrationUrl      String?
-  status               EventStatus      @default(upcoming)
-  reviewStatus         ReviewStatus     @default(approved)
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
+  formFields           Json?
+  registrationClicks   Int                @default(0)
+  status               EventStatus        @default(upcoming)
+  reviewStatus         ReviewStatus       @default(approved)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
   lastScrapedAt        DateTime?
   savedEvents          SavedEvent[]
   registrations        Registration[]
+  deadlineReminders    DeadlineReminder[]
 
   @@index([cityId])
   @@index([registrationDeadline])
   @@index([status])
   @@index([reviewStatus])
+}
+
+model DeadlineReminder {
+  id         String         @id @default(cuid())
+  userId     String
+  eventId    String
+  daysBefore Int
+  status     ReminderStatus @default(pending)
+  providerId String?
+  createdAt  DateTime       @default(now())
+  sentAt     DateTime?
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event      Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId, daysBefore])
+  @@index([eventId])
+  @@index([status, createdAt])
 }
