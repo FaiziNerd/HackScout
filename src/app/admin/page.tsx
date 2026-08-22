@@ -2,89 +2,177 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight, LockKey, ShieldCheck } from "@phosphor-icons/react/dist/ssr";
 
+import { ReviewQueueActions } from "@/components/review-queue-actions";
 import { SiteHeader } from "@/components/site-header";
+import { getAdminUser } from "@/lib/admin";
+import { formatCategory, formatEventDateRange, SOURCE_LABELS } from "@/lib/events";
+import {
+  getReviewQueue,
+  listReviewCities,
+  type ReviewFilter,
+} from "@/lib/submissions";
 
 export const metadata: Metadata = {
-  title: "Admin",
+  title: "Review queue",
 };
 
-export default function AdminPage() {
+interface PageProps {
+  searchParams: Promise<{ status?: string }>;
+}
+
+function parseStatus(value?: string): ReviewFilter {
+  if (value === "approved" || value === "rejected" || value === "pending") return value;
+  return "pending";
+}
+
+export default async function AdminPage({ searchParams }: PageProps) {
+  const admin = await getAdminUser();
+  const params = await searchParams;
+  const status = parseStatus(params.status);
+
+  if (!admin) {
+    return (
+      <div className="editorial-shell flex min-h-dvh flex-col bg-background text-foreground">
+        <SiteHeader />
+        <main className="mx-auto w-full max-w-[720px] flex-1 px-4 pb-16 pt-[6.5rem] sm:px-6">
+          <div className="border-2 border-foreground bg-card p-8">
+            <p className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+              <LockKey className="size-4" />
+              Restricted desk
+            </p>
+            <h1 className="mt-4 font-heading text-4xl font-semibold tracking-[-0.04em]">
+              Review queue is locked.
+            </h1>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Sign in with an address listed in <code>ADMIN_EMAILS</code>.
+            </p>
+            <Link href="/login?next=%2Fadmin" className="mt-6 inline-flex min-h-11 items-center underline">
+              Sign in
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const [{ events, tally }, cities] = await Promise.all([getReviewQueue(status), listReviewCities()]);
+
+  const tabs: { id: ReviewFilter; label: string; count: number }[] = [
+    { id: "pending", label: "Inbox", count: tally.pending },
+    { id: "approved", label: "Live", count: tally.approved },
+    { id: "rejected", label: "Held", count: tally.rejected },
+  ];
+
   return (
     <div className="editorial-shell flex min-h-dvh flex-col bg-background text-foreground">
       <SiteHeader />
-
-      <main className="flex flex-1 items-stretch pt-[4.5rem]">
-        <div className="mx-auto grid w-full max-w-[1500px] lg:grid-cols-[1.2fr_.8fr]">
-          <section className="relative flex min-h-[34rem] flex-col justify-between overflow-hidden border-foreground px-4 py-12 sm:px-6 sm:py-16 lg:border-r lg:px-10 lg:py-20">
-            <div aria-hidden className="paper-grid absolute inset-0 opacity-40" />
-            <div className="relative">
-              <div className="flex items-center gap-2 border-y border-foreground py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
-                <LockKey className="size-4" weight="bold" />
-                Restricted desk / internal
-              </div>
-              <h1 className="mt-9 max-w-[9ch] font-heading text-[clamp(4rem,9vw,8rem)] font-medium leading-[0.78] tracking-[-0.06em]">
-                Moderation
-                <span className="block italic text-primary">coming soon.</span>
-              </h1>
-            </div>
-
-            <p className="relative mt-12 max-w-[56ch] border-l-4 border-primary pl-4 text-sm font-medium leading-relaxed">
-              The review queue, source verification tools and publishing controls are scheduled for
-              a later release. Public event discovery remains fully available.
+      <main className="mx-auto w-full max-w-[1500px] flex-1 px-4 pb-16 pt-[6.5rem] sm:px-6 lg:px-10">
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b-2 border-foreground pb-6">
+          <div>
+            <p className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+              <ShieldCheck className="size-4" weight="fill" />
+              Signed in as {admin.email}
             </p>
-          </section>
-
-          <aside className="flex flex-col justify-between bg-foreground p-6 text-background sm:p-10 lg:p-12">
-            <div>
-              <div className="flex items-center justify-between border-b border-background/40 pb-4">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="size-5 text-primary-foreground" weight="fill" />
-                  <span className="font-mono text-[10px] uppercase tracking-[0.16em]">
-                    Desk status
-                  </span>
-                </div>
-                <span className="border border-primary-foreground px-2 py-1 font-mono text-[9px] uppercase text-primary-foreground">
-                  Locked
-                </span>
-              </div>
-
-              <dl className="mt-8 divide-y divide-background/25 border-y border-background/40">
-                {[
-                  ["Review queue", "Planned"],
-                  ["Source verification", "Planned"],
-                  ["Publishing controls", "Planned"],
-                ].map(([label, state], index) => (
-                  <div key={label} className="grid grid-cols-[2rem_1fr_auto] items-center gap-3 py-5">
-                    <span className="font-mono text-[9px] text-background/45">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <dt className="text-sm font-semibold">{label}</dt>
-                    <dd className="font-mono text-[9px] uppercase tracking-[0.12em] text-background/55">
-                      {state}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-
-            <div className="mt-12 space-y-3">
-              <Link
-                href="/events"
-                className="flex min-h-12 items-center justify-between border border-background bg-background px-5 text-xs font-semibold uppercase tracking-[0.12em] text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
-              >
-                Browse public index
-                <ArrowUpRight />
-              </Link>
-              <Link
-                href="/submit"
-                className="flex min-h-12 items-center justify-between border border-background/50 px-5 text-xs font-semibold uppercase tracking-[0.12em] text-background transition-colors hover:border-primary-foreground hover:text-primary-foreground"
-              >
-                File an event
-                <ArrowUpRight />
-              </Link>
-            </div>
-          </aside>
+            <h1 className="mt-2 font-heading text-5xl font-semibold tracking-[-0.05em] sm:text-6xl">
+              Review queue
+            </h1>
+            <p className="mt-3 max-w-[54ch] text-sm text-muted-foreground">
+              Community filings wait here. Publish to put them on the public feed; reject to keep them off
+              the map.
+            </p>
+          </div>
+          <Link
+            href="/admin/registrations"
+            className="inline-flex min-h-11 items-center gap-2 border-2 border-foreground px-4 text-[10px] font-semibold uppercase tracking-[0.12em]"
+          >
+            Signups ledger
+            <ArrowUpRight className="size-4" />
+          </Link>
         </div>
+
+        <nav className="mt-8 flex flex-wrap gap-2" aria-label="Queue filters">
+          {tabs.map((tab) => {
+            const active = tab.id === status;
+            return (
+              <Link
+                key={tab.id}
+                href={tab.id === "pending" ? "/admin" : `/admin?status=${tab.id}`}
+                className={`inline-flex min-h-11 items-center gap-2 border-2 px-4 font-mono text-[10px] uppercase tracking-[0.14em] ${
+                  active
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-foreground/40 hover:border-foreground"
+                }`}
+              >
+                {tab.label}
+                <span>{tab.count}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {events.length === 0 ? (
+          <p className="mt-12 max-w-[48ch] border-l-4 border-primary pl-4 text-sm">
+            {status === "pending"
+              ? "Inbox is clear. New /submit filings will land here."
+              : `No ${status} events in this tray.`}
+          </p>
+        ) : (
+          <ul className="mt-10 grid gap-6 lg:grid-cols-2">
+            {events.map((event) => (
+              <li key={event.id} className="border-2 border-foreground bg-card p-5 sm:p-6">
+                <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-primary">
+                  <span>
+                    {SOURCE_LABELS[event.source] ?? event.source} · {formatCategory(event.category)}
+                  </span>
+                  <span>{event.city.name}</span>
+                </div>
+                <h2 className="mt-3 font-heading text-2xl font-semibold tracking-[-0.03em]">{event.title}</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {formatEventDateRange(event.startDate, event.endDate)}
+                  {event.registrationDeadline
+                    ? ` · closes ${event.registrationDeadline.toLocaleDateString("en-PK", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}`
+                    : ""}
+                </p>
+                {event.organizerName ? (
+                  <p className="mt-1 text-sm">Organizer: {event.organizerName}</p>
+                ) : null}
+                <p className="mt-3 line-clamp-4 text-sm leading-relaxed">{event.description}</p>
+                <div className="mt-4 flex flex-wrap gap-3 font-mono text-[10px] uppercase tracking-[0.12em]">
+                  {event.registrationUrl || event.sourceUrl ? (
+                    <a
+                      href={event.registrationUrl || event.sourceUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline underline-offset-4"
+                    >
+                      Source link
+                    </a>
+                  ) : null}
+                  {event.sourcePostUrl ? (
+                    <a href={event.sourcePostUrl} target="_blank" rel="noreferrer" className="underline underline-offset-4">
+                      Original post
+                    </a>
+                  ) : null}
+                  {event.reviewStatus === "approved" ? (
+                    <Link href={`/events/${event.slug}`} className="underline underline-offset-4">
+                      Public page
+                    </Link>
+                  ) : null}
+                </div>
+                <ReviewQueueActions
+                  eventId={event.id}
+                  currentCityId={event.cityId}
+                  reviewStatus={event.reviewStatus}
+                  cities={cities}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
       </main>
     </div>
   );
