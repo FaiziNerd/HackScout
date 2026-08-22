@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 
+import { AuthNav } from "@/components/auth-nav";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -59,6 +60,7 @@ export function SiteHeader() {
           >
             Cities
           </Link>
+          <AuthNav />
           <Link
             href="/submit"
             className={cn(
