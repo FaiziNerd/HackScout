@@ -70,31 +70,31 @@ todos:
     status: completed
   - id: city-counts
     content: City event counts on grid + empty states
-    status: pending
+    status: completed
   - id: detail-page
     content: /events/[slug] page + countdown
-    status: pending
+    status: completed
   - id: detail-cta
     content: Registration CTA (external URL first)
-    status: pending
+    status: completed
   - id: auth-session
     content: Supabase Auth (Google + email) session wiring
-    status: pending
+    status: completed
   - id: auth-save-event
     content: Save event (SavedEvent)
-    status: pending
+    status: completed
   - id: native-reg
     content: Native form builder + submissions table
-    status: pending
+    status: completed
   - id: submit-form
     content: /submit real form
-    status: pending
+    status: completed
   - id: admin-queue
     content: /admin review queue
-    status: pending
+    status: completed
   - id: alerts-deadline
     content: Resend deadline emails
-    status: pending
+    status: completed
   - id: alerts-digest
     content: Weekly digest
     status: pending
