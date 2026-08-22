@@ -6,7 +6,9 @@ import { EventCard } from "@/components/event-card";
 import { SiteHeader } from "@/components/site-header";
 import { Input } from "@/components/ui/input";
 import type { EventCategory } from "@/generated/prisma/client";
+import { getAuthUser } from "@/lib/auth";
 import { getCityEventCounts, getFeedStats, getUpcomingEvents } from "@/lib/events";
+import { getSavedEventIds } from "@/lib/saved-events";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -47,7 +49,7 @@ export default async function EventsFeedPage({ searchParams }: PageProps) {
   const category = params.category as EventCategory | undefined;
   const search = params.q;
 
-  const [events, stats, cityCounts] = await Promise.all([
+  const [events, stats, cityCounts, user] = await Promise.all([
     getUpcomingEvents({
       city: city === "all" ? undefined : city,
       category,
@@ -55,7 +57,9 @@ export default async function EventsFeedPage({ searchParams }: PageProps) {
     }),
     getFeedStats(),
     getCityEventCounts(),
+    getAuthUser(),
   ]);
+  const savedIds = user ? await getSavedEventIds(user.id) : new Set<string>();
 
   return (
     <div className="editorial-shell flex min-h-dvh flex-col bg-background text-foreground">
@@ -278,7 +282,13 @@ export default async function EventsFeedPage({ searchParams }: PageProps) {
         ) : (
           <div className="grid border-l border-t border-foreground md:grid-cols-2 xl:grid-cols-3">
             {events.map((event, index) => (
-              <EventCard key={event.id} event={event} index={index + 1} />
+              <EventCard
+                key={event.id}
+                event={event}
+                index={index + 1}
+                saved={savedIds.has(event.id)}
+                signedIn={Boolean(user)}
+              />
             ))}
           </div>
         )}

@@ -4,6 +4,7 @@ import { ArrowUpRight, CalendarBlank, Star } from "@phosphor-icons/react/dist/ss
 import { CategoryBadge } from "@/components/category-badge";
 import { CityBadge } from "@/components/city-badge";
 import { DeadlineBadge } from "@/components/deadline-badge";
+import { SaveEventButton } from "@/components/save-event-button";
 import type { City, Event } from "@/generated/prisma/client";
 import { formatEventDateRange, SOURCE_LABELS } from "@/lib/events";
 
@@ -12,19 +13,22 @@ export type EventWithCity = Event & { city: City };
 export interface EventCardProps {
   event: EventWithCity;
   index?: number;
+  saved?: boolean;
+  signedIn?: boolean;
 }
 
-export function EventCard({ event, index = 1 }: EventCardProps) {
+export function EventCard({ event, index = 1, saved = false, signedIn = false }: EventCardProps) {
   const sourceLabel = SOURCE_LABELS[event.source];
 
   return (
     <article className="group relative flex min-h-[27rem] flex-col border-b border-r border-foreground bg-background transition-colors hover:bg-card">
+      <SaveEventButton slug={event.slug} initialSaved={saved} signedIn={signedIn} />
       <Link
         href={`/events/${event.slug}`}
         className="flex h-full flex-1 flex-col p-5 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary sm:p-6"
         aria-label={`View ${event.title} details and registration`}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-foreground pb-4">
+        <div className="flex items-start justify-between gap-4 border-b border-foreground pb-4 pr-12">
           <span className="font-heading text-4xl italic leading-none text-muted-foreground/70">
             {String(index).padStart(2, "0")}
           </span>

@@ -1,4 +1,4 @@
-import type { EventCategory, EventSource } from "@/generated/prisma/client";
+import type { EventCategory, EventSource, EventStatus } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
 
 export interface EventFeedFilters {
@@ -97,6 +97,26 @@ export async function getCityEventCounts() {
     .slice(0, 8);
 }
 
+export async function getAllCityEventCounts() {
+  const activeEventWhere = {
+    reviewStatus: "approved" as const,
+    status: { in: ["upcoming" as const, "ongoing" as const] },
+  };
+
+  const cities = await prisma.city.findMany({
+    select: {
+      slug: true,
+      _count: {
+        select: {
+          events: { where: activeEventWhere },
+        },
+      },
+    },
+  });
+
+  return new Map(cities.map((city) => [city.slug, city._count.events]));
+}
+
 export async function getCityBySlug(slug: string) {
   return prisma.city.findUnique({
     where: { slug },
@@ -108,6 +128,27 @@ export async function getCityBySlug(slug: string) {
       country: true,
       isVirtual: true,
     },
+  });
+}
+
+export async function getEventBySlug(slug: string) {
+  return prisma.event.findFirst({
+    where: { slug, reviewStatus: "approved" },
+    include: { city: true },
+  });
+}
+
+export async function getRelatedCityEvents(cityId: string, excludeEventId: string, limit = 3) {
+  return prisma.event.findMany({
+    where: {
+      cityId,
+      id: { not: excludeEventId },
+      reviewStatus: "approved",
+      status: { in: ["upcoming", "ongoing"] },
+    },
+    include: { city: true },
+    orderBy: [{ registrationDeadline: { sort: "asc", nulls: "last" } }, { startDate: "asc" }],
+    take: limit,
   });
 }
 
@@ -155,8 +196,60 @@ export const SOURCE_LABELS: Partial<Record<EventSource, string>> = {
   devpost: "Devpost",
   talentshowcase: "TalentShowcase",
   eventbrite: "Eventbrite",
+  luma: "Luma",
+  unstop: "Unstop",
+  hackerearth: "HackerEarth",
   facebook: "Facebook",
   university: "University",
   linkedin: "LinkedIn",
+  instagram: "Instagram",
   community: "Community",
+  admin: "HackScout",
 };
+
+export function getExternalRegistrationUrl(event: {
+  registrationUrl: string | null;
+  sourceUrl: string;
+}): string | null {
+  const url = event.registrationUrl || event.sourceUrl;
+  return url || null;
+}
+
+export function isRegistrationOpen(deadline: Date | null, status: EventStatus): boolean {
+  if (status === "closed") return false;
+  if (!deadline) return true;
+  return deadline.getTime() > Date.now();
+}
+
+export function getRegistrationCtaLabel(source: EventSource): string {
+  const sourceLabel = SOURCE_LABELS[source] || source;
+  return `Register on ${sourceLabel}`;
+}
+
+export async function trackExternalRegistrationClick(slug: string) {
+  const event = await prisma.event.findFirst({
+    where: { slug, reviewStatus: "approved" },
+    select: {
+      id: true,
+      status: true,
+      registrationDeadline: true,
+      registrationUrl: true,
+      sourceUrl: true,
+      registrationType: true,
+    },
+  });
+
+  if (!event || event.registrationType === "native") return null;
+
+  const destination = getExternalRegistrationUrl(event);
+  if (!destination || !isRegistrationOpen(event.registrationDeadline, event.status)) {
+    return null;
+  }
+
+  await prisma.event.update({
+    where: { id: event.id },
+    data: { registrationClicks: { increment: 1 } },
+  });
+
+  return destination;
+}
