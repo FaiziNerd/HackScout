@@ -16,7 +16,8 @@ Sirf remaining production tasks. Local env/build/runtime/data/auth/QA checks alr
   - `RESEND_API_KEY`, `DEADLINE_EMAIL_FROM`
   - `ADMIN_EMAILS`
   - `GROQ_API_KEY`
-- First deploy ke baad generated Vercel URL copy karein.
+- Generated Vercel URL:
+  - `https://hack-scout-two.vercel.app`
 - `NEXT_PUBLIC_SITE_URL` ko generated Vercel URL par update karein.
 - `NEXT_PUBLIC_SITE_URL` update ke baad redeploy karein.
 
@@ -34,7 +35,7 @@ Sirf remaining production tasks. Local env/build/runtime/data/auth/QA checks alr
 ## 3) Supabase Auth
 
 - Supabase redirect allow-list mein add karein:
-  - `https://YOUR_VERCEL_URL/auth/callback`
+  - `https://hack-scout-two.vercel.app/auth/callback`
   - `http://localhost:3000/auth/callback`
 - Production par Google login aur magic link manually verify karein.
 
