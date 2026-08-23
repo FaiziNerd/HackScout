@@ -5,7 +5,7 @@ export const SCRAPER_QUEUE_NAME = "event-scrapers";
 export const RUN_ALL_SCRAPERS_JOB = "run-all";
 export const SCRAPER_SCHEDULER_ID = "run-all-every-6h";
 export type ScraperJobName = typeof RUN_ALL_SCRAPERS_JOB | typeof SCRAPER_SCHEDULER_ID;
-/** UTC: 00:00, 06:00, 12:00, 18:00. Matches the Vercel cron in vercel.json. */
+/** Worker schedule: UTC 00:00, 06:00, 12:00, 18:00. Vercel Hobby cron is daily backup. */
 export const SCRAPER_CRON_PATTERN = "0 */6 * * *";
 
 export interface RunAllScrapersJobData {
