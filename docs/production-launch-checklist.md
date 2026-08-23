@@ -1,113 +1,78 @@
 # HackScout Production Launch Checklist
 
-Completed checks marked hain. Remaining work order mein run karein.
+Sirf remaining production tasks. Local env/build/runtime/data/auth/QA checks already pass ho chuke hain.
 
 ## 1) Vercel Web App
 
 - Repo import karein in Vercel (Framework: Next.js).
-- Build command ensure karein:
+- Confirm `vercel.json` build command use ho raha hai:
   - `npx prisma generate && npx prisma migrate deploy && next build`
-- Domain set karein (`NEXT_PUBLIC_SITE_URL` isi canonical URL par ho).
+- Vercel project env vars mein local `.env` wali production values add karein:
+  - `DATABASE_URL`, `DIRECT_URL`
+  - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `CRON_SECRET`
+  - `REDIS_URL`
+  - `RESEND_API_KEY`, `DEADLINE_EMAIL_FROM`
+  - `ADMIN_EMAILS`
+  - `GROQ_API_KEY`
+- First deploy ke baad generated Vercel URL copy karein.
+- `NEXT_PUBLIC_SITE_URL` ko generated Vercel URL par update karein.
+- `NEXT_PUBLIC_SITE_URL` update ke baad redeploy karein.
 
-## 2) Env Vars (Remaining)
+## 2) Worker Hosting
 
-- Must fix first:
-  - [x] `REDIS_URL` set hai (required)
-  - [ ] `NEXT_PUBLIC_SITE_URL` ko localhost se production domain par update karo
-- Recommended add karo:
-  - [ ] `SUPABASE_SERVICE_ROLE_KEY`
-  - [x] `RESEND_API_KEY`
-  - [ ] `DEADLINE_EMAIL_FROM`
-  - [ ] `ADMIN_EMAILS`
-  - [x] `GROQ_API_KEY`
-- Production env load karne ke baad run:
+- Render/Railway par worker service create karein.
+- Start command:
+  - `npm run worker`
+- Worker env vars add karein:
+  - `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, `NEXT_PUBLIC_SITE_URL`
+- Startup logs mein confirm karein:
+  - `worker listening`
+  - scraper schedule registered
+
+## 3) Supabase Auth
+
+- Supabase redirect allow-list mein add karein:
+  - `https://YOUR_VERCEL_URL/auth/callback`
+  - `http://localhost:3000/auth/callback`
+- Production par Google login aur magic link manually verify karein.
+
+## 4) Production Checks
+
+Production URL/env set hone ke baad run karein:
 
 ```bash
 npm run launch:env:check
 npm run launch:runtime:check
-```
-
-- Required vars final pass honi chahiye:
-  - `DATABASE_URL`, `DIRECT_URL`
-  - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-  - `NEXT_PUBLIC_SITE_URL`, `CRON_SECRET`, `REDIS_URL`
-- [x] `npm run launch:env:check` required vars pass.
-- [x] `npm run launch:runtime:check` DB + Redis connectivity pass.
-
-## 3) Worker (Render/Railway)
-
-- Start command:
-  - `npm run worker`
-- Required worker env:
-  - `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, `NEXT_PUBLIC_SITE_URL`
-- Startup logs mein queue listener aur schedule registration confirm karein.
-
-## 4) Supabase Auth
-
-- Redirect allow-list:
-  - `https://YOUR_DOMAIN/auth/callback`
-  - `http://localhost:3000/auth/callback`
-- App + Supabase auth service readiness:
-
-```bash
 npm run launch:auth:check
-```
-- [x] Supabase auth service reachable.
-- [x] `/auth/callback` route exists and redirects without code.
-- Google + magic link दोनों production mein manually verify karein.
-
-## 5) Production DB
-
-```bash
-npm run db:migrate:deploy
-npm run db:seed
 npm run launch:data:check
-```
-
-- Verify:
-  - `/events`
-  - `/cities/lahore`
-- [x] `npm run launch:data:check` pass: city rows, approved live events, and Lahore city present.
-
-## 6) Cron + Queue
-
-```bash
 npm run launch:cron:check
-```
-
-- Script sab cron endpoints ko `Authorization: Bearer <CRON_SECRET>` se hit karta hai.
-- Har response mein `ok: true` expect hota hai.
-
-## 7) Launch QA
-
-```bash
 npm run launch:qa:check
 ```
 
-- Script checks:
-  - `/sitemap.xml`
-  - `/robots.txt`
-  - `/cities/lahore` title contains `Hackathons in Lahore <year>`
-- [x] Local `npm run launch:qa:check` pass on `http://localhost:3000`.
-- [ ] Production domain par launch QA run karo.
-- OG share preview (LinkedIn/WhatsApp) aur mobile smoke manual rehta hai.
-
-## Fast Path (Automated)
+Fast path:
 
 ```bash
 npm run launch:check:all
 ```
 
-- Yeh env, runtime, auth, data, cron, aur QA checks sequence mein chalata hai.
+## 5) Manual QA
 
-## 8) Go-Live Sign-off
+- `/events` open karke listing verify karein.
+- `/cities/lahore` title/content verify karein.
+- `/login` se login flow verify karein.
+- `/admin` access admin email se verify karein.
+- OG share preview LinkedIn/WhatsApp par verify karein.
+- Mobile smoke test karein.
 
-- Remaining final checks:
+## 6) Go-Live Sign-off
+
 - [ ] Vercel app healthy
 - [ ] Worker healthy
-- [ ] Env vars complete
+- [ ] Vercel env vars complete
+- [ ] `NEXT_PUBLIC_SITE_URL` production URL par set
 - [ ] Supabase callbacks configured
-- [ ] Migrations + seed done
 - [ ] Cron endpoints authorized and passing
 - [ ] Queue processing verified
 - [ ] SEO/share/mobile QA passed
