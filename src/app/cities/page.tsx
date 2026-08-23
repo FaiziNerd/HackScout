@@ -1,16 +1,18 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight, Crosshair, Globe, MapPin } from "@phosphor-icons/react/dist/ssr";
 
+import { MissingEventCta } from "@/components/missing-event-cta";
 import { SiteHeader } from "@/components/site-header";
 import { PAKISTAN_CITIES } from "@/lib/cities";
 import { getAllCityEventCounts } from "@/lib/events";
+import { pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Cities Directory | HackScout",
+export const metadata = pageMetadata({
+  title: "Cities Directory",
   description:
     "Browse tech, hackathon, and developer event hubs across all provinces and regions in Pakistan.",
-};
+  path: "/cities",
+});
 
 const cityHighlights: Record<
   string,
@@ -214,13 +216,18 @@ export default async function CitiesPage() {
           <p className="max-w-[38ch] font-heading text-3xl font-medium leading-tight">
             Don&apos;t see your local community?
           </p>
-          <Link
-            href="/submit"
-            className="flex min-h-12 items-center justify-between gap-5 border border-primary-foreground bg-primary-foreground px-5 text-xs font-semibold uppercase tracking-[0.12em] text-primary transition-colors hover:bg-foreground hover:text-background"
-          >
-            File an event listing
-            <ArrowUpRight />
-          </Link>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <MissingEventCta className="flex min-h-12 items-center justify-between gap-5 border border-primary-foreground px-5 text-xs font-semibold uppercase tracking-[0.12em] text-primary-foreground transition-colors hover:bg-primary-foreground hover:text-primary">
+              Missing an event?
+            </MissingEventCta>
+            <Link
+              href="/submit"
+              className="flex min-h-12 items-center justify-between gap-5 border border-primary-foreground bg-primary-foreground px-5 text-xs font-semibold uppercase tracking-[0.12em] text-primary transition-colors hover:bg-foreground hover:text-background"
+            >
+              File an event listing
+              <ArrowUpRight />
+            </Link>
+          </div>
         </div>
       </footer>
     </div>

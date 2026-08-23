@@ -29,6 +29,8 @@ const submitSchema = z
     formFields: z.unknown().optional(),
     organizerName: z.string().trim().min(2, "Organizer name is required."),
     prizePool: z.string().trim().optional(),
+    source: z.enum(["community", "linkedin"]).default("community"),
+    sourcePostUrl: z.union([z.string().url("Enter a valid source post URL."), z.literal("")]).optional(),
   })
   .superRefine((data, ctx) => {
     if (data.citySlug === "other" && (!data.customCityName || data.customCityName.length < 2)) {
@@ -67,7 +69,8 @@ export async function POST(request: Request) {
       prizePool: data.prizePool || undefined,
       customCityName: data.customCityName || undefined,
       registrationUrl: data.registrationUrl || undefined,
-      source: "community",
+      source: data.source,
+      sourcePostUrl: data.sourcePostUrl || undefined,
       isOnline: data.citySlug === "online",
     });
 

@@ -1,24 +1,37 @@
 # HackScout
 
-Pakistan ka event hub — every hackathon, conference, workshop, meetup, and competition, listed by city.
+Pakistan ka event hub — hackathons, conferences, workshops, meetups, and competitions, listed by city.
 
 ## Stack
 
 - **Next.js 16.3** (App Router, Turbopack) + TypeScript
-- **Tailwind CSS** + **shadcn/ui**
 - **Prisma** + PostgreSQL (Supabase)
-- **Supabase Auth** (Google OAuth + email magic link)
+- **Supabase Auth** (Google OAuth + magic link)
+- **BullMQ** + Redis for scraper jobs
 
-## Setup
+## Local Setup
 
-1. Copy `.env.example` to `.env` and fill in your Supabase Postgres URL and keys.
-2. In the Supabase dashboard, enable **Google** and **Email** (magic link). Add redirect URLs:
-   - `http://localhost:3000/auth/callback`
-   - `https://YOUR_DOMAIN/auth/callback`
-2. Install: `npm install`
-3. Generate Prisma Client: `npm run db:generate`
-4. Dev server: `npm run dev` → [http://localhost:3000](http://localhost:3000)
+1. Copy `.env.example` to `.env`.
+2. Install deps: `npm install`
+3. Generate client: `npm run db:generate`
+4. Apply migrations: `npm run db:migrate`
+5. Seed data: `npm run db:seed`
+6. Run app: `npm run dev`
 
-## Current status
+## Deploy
 
-Foundation scaffold only. Prisma models, scrapers, and the city feed are not built yet.
+- Web app: **Vercel**
+- Worker: **Render** or **Railway**
+- Full launch runbook: `docs/production-launch-checklist.md`
+
+### Launch Automation Commands
+
+```bash
+npm run launch:env:check
+npm run launch:runtime:check
+npm run launch:auth:check
+npm run launch:data:check
+npm run launch:cron:check
+npm run launch:qa:check
+npm run launch:check:all
+```

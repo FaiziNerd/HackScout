@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { BookmarkSimple } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
@@ -22,13 +22,10 @@ export function SaveEventButton({
   className,
 }: SaveEventButtonProps) {
   const router = useRouter();
-  const [isSaved, setIsSaved] = useState(initialSaved);
+  const [optimisticSaved, setOptimisticSaved] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-
-  useEffect(() => {
-    setIsSaved(initialSaved);
-  }, [initialSaved]);
+  const isSaved = optimisticSaved ?? initialSaved;
 
   async function toggleSave() {
     if (!signedIn) {
@@ -38,24 +35,24 @@ export function SaveEventButton({
 
     setError(null);
     const previous = isSaved;
-    setIsSaved(!previous);
+    setOptimisticSaved(!previous);
 
     try {
       const response = await fetch(`/api/events/${slug}/save`, { method: "POST" });
       const payload = (await response.json()) as { saved?: boolean; error?: string };
 
       if (!response.ok) {
-        setIsSaved(previous);
+        setOptimisticSaved(previous);
         setError(payload.error ?? "Could not save this listing.");
         return;
       }
 
-      setIsSaved(Boolean(payload.saved));
+      setOptimisticSaved(Boolean(payload.saved));
       startTransition(() => {
         router.refresh();
       });
     } catch {
-      setIsSaved(previous);
+      setOptimisticSaved(previous);
       setError("Could not save this listing.");
     }
   }

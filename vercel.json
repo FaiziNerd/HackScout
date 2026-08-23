@@ -1,8 +1,18 @@
 {
+  "framework": "nextjs",
+  "buildCommand": "npx prisma generate && npx prisma migrate deploy && next build",
   "crons": [
+    {
+      "path": "/api/cron/scrapers",
+      "schedule": "0 */6 * * *"
+    },
     {
       "path": "/api/cron/deadline-reminders",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/weekly-digest",
+      "schedule": "0 3 * * 1"
     }
   ]
 }

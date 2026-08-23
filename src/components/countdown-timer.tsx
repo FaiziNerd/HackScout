@@ -17,8 +17,8 @@ interface TimeLeft {
   expired: boolean;
 }
 
-function getTimeLeft(deadlineIso: string): TimeLeft {
-  const diff = new Date(deadlineIso).getTime() - Date.now();
+function getTimeLeftFrom(deadlineIso: string, nowMs: number): TimeLeft {
+  const diff = new Date(deadlineIso).getTime() - nowMs;
   if (diff <= 0) {
     return { days: 0, hours: 0, minutes: 0, seconds: 0, expired: true };
   }
@@ -37,16 +37,13 @@ function pad(value: number) {
 }
 
 export function CountdownTimer({ deadline, className }: CountdownTimerProps) {
-  const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(() =>
-    deadline ? getTimeLeft(deadline) : null
-  );
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     if (!deadline) return;
 
-    setTimeLeft(getTimeLeft(deadline));
     const interval = window.setInterval(() => {
-      setTimeLeft(getTimeLeft(deadline));
+      setNow(Date.now());
     }, 1000);
 
     return () => window.clearInterval(interval);
@@ -64,7 +61,7 @@ export function CountdownTimer({ deadline, className }: CountdownTimerProps) {
     );
   }
 
-  const live = timeLeft ?? getTimeLeft(deadline);
+  const live = getTimeLeftFrom(deadline, now);
   const units = [
     { label: "Days", value: pad(live.days) },
     { label: "Hours", value: pad(live.hours) },

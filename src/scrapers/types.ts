@@ -31,6 +31,13 @@ export interface ScraperResult {
   source: EventSource;
   events: ScrapedEventInput[];
   errors?: string[];
+  stats?: {
+    candidatesFound?: number;
+    detailHydrated?: number;
+    matchedPakistan?: number;
+    filteredOut?: number;
+    invalidMapped?: number;
+  };
 }
 
 /**

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SignOut } from "@phosphor-icons/react";
 
 import { buttonVariants } from "@/components/ui/button";
@@ -16,13 +16,13 @@ type HeaderUser = {
 
 export function AuthNav() {
   const pathname = usePathname();
-  const [user, setUser] = useState<HeaderUser | null>(null);
-  const [ready, setReady] = useState(false);
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+  const [user, setUser] = useState<HeaderUser | null | undefined>(() =>
+    supabase ? undefined : null
+  );
 
   useEffect(() => {
-    const supabase = createSupabaseBrowserClient();
     if (!supabase) {
-      setReady(true);
       return;
     }
 
@@ -39,7 +39,6 @@ export function AuthNav() {
             }
           : null
       );
-      setReady(true);
     });
 
     const {
@@ -60,9 +59,9 @@ export function AuthNav() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [supabase]);
 
-  if (!ready) {
+  if (user === undefined) {
     return <div className="hidden h-11 w-[4.5rem] sm:block" aria-hidden />;
   }
 

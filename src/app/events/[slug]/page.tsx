@@ -16,17 +16,34 @@ import { CityBadge } from "@/components/city-badge";
 import { CountdownTimer } from "@/components/countdown-timer";
 import { DeadlineBadge } from "@/components/deadline-badge";
 import { EventCard } from "@/components/event-card";
+import { JsonLd } from "@/components/json-ld";
+import { MissingEventCta } from "@/components/missing-event-cta";
 import { RegistrationCta } from "@/components/registration-cta";
 import { SaveEventButton } from "@/components/save-event-button";
 import { SiteHeader } from "@/components/site-header";
 import { getAuthUser } from "@/lib/auth";
-import { formatEventDateRange, getEventBySlug, getRelatedCityEvents, SOURCE_LABELS } from "@/lib/events";
 import { prisma } from "@/lib/db";
+import { formatEventDateRange, getEventBySlug, getRelatedCityEvents, SOURCE_LABELS } from "@/lib/events";
 import { parseFormFields } from "@/lib/registration-form";
 import { getSavedEventIds } from "@/lib/saved-events";
+import { eventJsonLd, eventShareText } from "@/lib/seo";
+import { absoluteUrl, pageMetadata, truncateText } from "@/lib/site";
 
 interface EventDetailPageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateStaticParams() {
+  try {
+    const events = await prisma.event.findMany({
+      where: { reviewStatus: "approved", status: { in: ["upcoming", "ongoing"] } },
+      select: { slug: true },
+      take: 200,
+    });
+    return events.map((event) => ({ slug: event.slug }));
+  } catch {
+    return [];
+  }
 }
 
 export async function generateMetadata({ params }: EventDetailPageProps): Promise<Metadata> {
@@ -34,16 +51,25 @@ export async function generateMetadata({ params }: EventDetailPageProps): Promis
   const event = await getEventBySlug(slug);
 
   if (!event) {
-    return {
+    return pageMetadata({
       title: "Event not found",
       description: "This listing is not in the HackScout index.",
-    };
+      path: `/events/${slug}`,
+      noIndex: true,
+    });
   }
 
-  return {
-    title: event.title,
-    description: event.description.slice(0, 160),
-  };
+  const description = truncateText(
+    `${event.title} in ${event.city.name}. ${event.description}`,
+    160,
+  );
+
+  return pageMetadata({
+    title: `${event.title} · ${event.city.name}`,
+    description,
+    path: `/events/${event.slug}`,
+    type: "article",
+  });
 }
 
 export default async function EventDetailPage({ params }: EventDetailPageProps) {
@@ -73,12 +99,19 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
       )
     : false;
   const sourceLabel = SOURCE_LABELS[event.source] || event.source;
-  const shareText = `Found this on HackScout — ${event.title} in ${event.city.name}`;
+  const pageUrl = absoluteUrl(`/events/${event.slug}`);
+  const shareText = eventShareText({
+    title: event.title,
+    cityName: event.city.name,
+    category: event.category,
+    registrationDeadline: event.registrationDeadline,
+  });
   const extraSources = event.sources.filter((item) => item !== event.source);
 
   return (
     <div className="editorial-shell flex min-h-dvh flex-col bg-background text-foreground">
       <SiteHeader />
+      <JsonLd data={eventJsonLd(event)} />
 
       <main className="mx-auto w-full max-w-[1500px] flex-1 px-4 pb-16 pt-[6.5rem] sm:px-6 lg:px-10">
         <Link
@@ -207,7 +240,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               </p>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <a
-                  href={`https://wa.me/?text=${encodeURIComponent(`${shareText} ${event.sourceUrl}`)}`}
+                  href={`https://wa.me/?text=${encodeURIComponent(`${shareText} ${pageUrl}`)}`}
                   target="_blank"
                   rel="noreferrer"
                   className="flex min-h-11 items-center justify-center gap-2 border border-foreground text-[10px] font-semibold uppercase tracking-[0.12em] hover:bg-foreground hover:text-background"
@@ -216,7 +249,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                   WhatsApp
                 </a>
                 <a
-                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(event.sourceUrl)}`}
+                  href={`https://www.linkedin.com/feed/?shareActive=true&text=${encodeURIComponent(`${shareText} ${pageUrl}`)}`}
                   target="_blank"
                   rel="noreferrer"
                   className="flex min-h-11 items-center justify-center border border-foreground text-[10px] font-semibold uppercase tracking-[0.12em] hover:bg-foreground hover:text-background"
@@ -257,6 +290,22 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
             </div>
           </section>
         )}
+
+        <aside className="mt-14 border-2 border-foreground bg-card p-6 sm:p-8">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+            Coverage loop
+          </p>
+          <h2 className="mt-2 font-heading text-3xl font-semibold tracking-[-0.03em]">
+            Know another listing that should be here?
+          </h2>
+          <p className="mt-3 max-w-[52ch] text-sm leading-relaxed text-muted-foreground">
+            If this event is listed but a sibling campus event is not, tip the desk. Name, city, and a link
+            is enough.
+          </p>
+          <MissingEventCta className="mt-5 inline-flex min-h-11 items-center border border-foreground bg-foreground px-5 text-xs font-semibold uppercase tracking-[0.12em] text-background hover:bg-primary">
+            Missing an event?
+          </MissingEventCta>
+        </aside>
       </main>
     </div>
   );

@@ -34,25 +34,25 @@ todos:
     status: completed
   - id: scraper-eventbrite
     content: Eventbrite scraper
-    status: pending
+    status: completed
   - id: scraper-luma
     content: Luma scraper
     status: completed
   - id: scraper-unstop
     content: Unstop scraper
-    status: pending
+    status: completed
   - id: scraper-hackerearth
     content: HackerEarth scraper
-    status: pending
+    status: completed
   - id: scrapers-run-all
     content: run-all CLI that writes events + ScrapeLog
-    status: pending
+    status: completed
   - id: worker-queue
     content: BullMQ + Redis deps + job queue
-    status: pending
+    status: completed
   - id: worker-cron
     content: 6-hour cron + worker process
-    status: pending
+    status: completed
   - id: landing-page
     content: Marketing landing at / with CTAs; app feed lives at /events
     status: completed
@@ -97,33 +97,54 @@ todos:
     status: completed
   - id: alerts-digest
     content: Weekly digest
-    status: pending
+    status: completed
   - id: scraper-facebook
     content: Facebook public events scraper
-    status: pending
+    status: completed
   - id: scraper-nust
     content: NUST calendar scraper
-    status: pending
+    status: completed
   - id: scraper-lums
     content: LUMS calendar scraper
-    status: pending
+    status: completed
   - id: scraper-fast
     content: FAST calendar scraper
-    status: pending
+    status: completed
   - id: scraper-giki
     content: GIKI calendar scraper
-    status: pending
+    status: completed
   - id: scraper-comsats
     content: COMSATS calendar scraper
-    status: pending
+    status: completed
   - id: linkedin-capture
     content: LinkedIn paste/extract flow
-    status: pending
+    status: completed
   - id: missing-event
     content: Missing an event CTA + form
-    status: pending
+    status: completed
   - id: deploy
     content: Deploy + SEO/OG + seed launch events
+    status: pending
+  - id: deploy-vercel
+    content: Deploy Next.js app to Vercel production
+    status: pending
+  - id: deploy-worker
+    content: Run BullMQ worker on Render or Railway
+    status: pending
+  - id: deploy-env-prod
+    content: Configure production env vars (DB, Supabase, Redis, Resend, site URL, cron secret)
+    status: pending
+  - id: deploy-auth-prod
+    content: Add production Supabase auth callback URL (/auth/callback)
+    status: pending
+  - id: deploy-db-prod
+    content: Run prisma migrate deploy and production db seed
+    status: pending
+  - id: deploy-cron-queue-verify
+    content: Verify cron routes enqueue and worker executes jobs
+    status: pending
+  - id: deploy-launch-qa
+    content: Launch QA (sitemap, robots, city SEO title, OG share preview, mobile smoke)
     status: pending
 isProject: false
 ---
@@ -669,6 +690,50 @@ hackscout/
 - Performance (ISR for event pages)
 - Seed initial events manually for launch day content
 - Share on LinkedIn (your existing audience is the perfect launch channel)
+
+### Phase 7 — Production Deployment Runbook (Go-Live)
+
+**Goal:** production launch with app + worker + cron + email flows all green.
+
+#### 1. Vercel app deployment
+- Import repo in Vercel as Next.js project
+- Keep build command: `npx prisma generate && npx prisma migrate deploy && next build`
+- Set production domain and confirm `NEXT_PUBLIC_SITE_URL` is canonical
+- Confirm deploy succeeds without runtime env errors
+
+#### 2. Worker deployment (Render or Railway)
+- Create dedicated worker service from same repo
+- Start command: `npm run worker`
+- Verify worker boot log shows queue subscription and 6-hour schedule registration
+- Ensure worker restarts cleanly on deploy/restart
+
+#### 3. Production environment setup
+- Required: `DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`, `CRON_SECRET`, `REDIS_URL`
+- Recommended: `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `DEADLINE_EMAIL_FROM`, `ADMIN_EMAILS`, `OPENAI_API_KEY`
+- Confirm Vercel + worker both use production values (not staging/local leftovers)
+
+#### 4. Auth production config
+- In Supabase Auth redirect allow-list, add `https://YOUR_DOMAIN/auth/callback`
+- Keep local callback for dev (`http://localhost:3000/auth/callback`)
+- Validate Google OAuth and magic-link login in production browser
+
+#### 5. DB production preparation
+- Run `npm run db:migrate:deploy` against production DB
+- Run `npm run db:seed` against production DB
+- Confirm city rows and launch events exist; verify event counts on `/events` and `/cities`
+
+#### 6. Cron and queue verification
+- Hit `/api/cron/scrapers` with Bearer `CRON_SECRET`; expect `ok: true` and job enqueue/skip response
+- Hit `/api/cron/deadline-reminders` with Bearer `CRON_SECRET`; expect success JSON
+- Hit `/api/cron/weekly-digest` with Bearer `CRON_SECRET`; expect success JSON
+- Confirm worker logs show job processing, completion summaries, and no Redis connection failures
+
+#### 7. Launch QA checks
+- SEO: `/sitemap.xml`, `/robots.txt` resolve on production
+- City SEO title check: `/cities/lahore` renders "Hackathons in Lahore <year>"
+- OG/share: verify event page preview on LinkedIn + WhatsApp
+- Mobile smoke: home, events list, event detail, login, submit flow
+- Final sign-off: worker healthy, cron authorized, reminders/digest paths operational
 
 ---
 

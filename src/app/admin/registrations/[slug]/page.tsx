@@ -6,6 +6,7 @@ import { ArrowLeft, DownloadSimple, LockKey } from "@phosphor-icons/react/dist/s
 import { SiteHeader } from "@/components/site-header";
 import { getAdminUser } from "@/lib/admin";
 import { getEventRegistrations } from "@/lib/registrations";
+import { pageMetadata } from "@/lib/site";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -13,7 +14,12 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  return { title: `Signups · ${slug}` };
+  return pageMetadata({
+    title: `Signups · ${slug}`,
+    description: "Admin registration export for a hosted HackScout event.",
+    path: `/admin/registrations/${slug}`,
+    noIndex: true,
+  });
 }
 
 export default async function EventRegistrationsPage({ params }: PageProps) {

@@ -4,14 +4,24 @@ import { ArrowUpRight, Globe, MapPin } from "@phosphor-icons/react/dist/ssr";
 import { notFound } from "next/navigation";
 
 import { EventCard } from "@/components/event-card";
+import { JsonLd } from "@/components/json-ld";
+import { MissingEventCta } from "@/components/missing-event-cta";
 import { SiteHeader } from "@/components/site-header";
 import { getAuthUser } from "@/lib/auth";
 import { PAKISTAN_CITIES } from "@/lib/cities";
 import { getCityBySlug, getUpcomingEvents } from "@/lib/events";
 import { getSavedEventIds } from "@/lib/saved-events";
+import { cityCollectionJsonLd, citySeoDescription, citySeoTitle } from "@/lib/seo";
+import { pageMetadata } from "@/lib/site";
 
 interface CityPageProps {
   params: Promise<{ slug: string }>;
+}
+
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  return PAKISTAN_CITIES.map((city) => ({ slug: city.slug }));
 }
 
 export async function generateMetadata({ params }: CityPageProps): Promise<Metadata> {
@@ -20,18 +30,21 @@ export async function generateMetadata({ params }: CityPageProps): Promise<Metad
   const fallbackCity = PAKISTAN_CITIES.find((item) => item.slug === slug);
 
   if (!city && !fallbackCity) {
-    return {
-      title: "City Not Found | HackScout",
+    return pageMetadata({
+      title: "City Not Found",
       description: "The requested city desk could not be found.",
-    };
+      path: `/cities/${slug}`,
+      noIndex: true,
+    });
   }
 
   const cityName = city?.name || fallbackCity?.name || slug;
 
-  return {
-    title: `${cityName} Events | HackScout`,
-    description: `Explore upcoming tech events in ${cityName}, sorted by registration deadlines.`,
-  };
+  return pageMetadata({
+    title: citySeoTitle(cityName),
+    description: citySeoDescription(cityName),
+    path: `/cities/${slug}`,
+  });
 }
 
 export default async function CityListingsPage({ params }: CityPageProps) {
@@ -56,6 +69,7 @@ export default async function CityListingsPage({ params }: CityPageProps) {
   return (
     <div className="editorial-shell flex min-h-dvh flex-col bg-background text-foreground">
       <SiteHeader />
+      <JsonLd data={cityCollectionJsonLd(cityName, slug, events.length)} />
 
       <header className="border-b-2 border-foreground pt-[4.5rem]">
         <div className="mx-auto max-w-[1500px] px-4 py-10 sm:px-6 sm:py-14 lg:px-10">
@@ -122,14 +136,23 @@ export default async function CityListingsPage({ params }: CityPageProps) {
           <div className="paper-grid border-2 border-foreground bg-card p-8 text-center sm:p-16">
             <p className="font-heading text-4xl font-semibold">No open listings in this desk yet.</p>
             <p className="mx-auto mt-3 max-w-[50ch] text-sm leading-relaxed text-muted-foreground">
-              This city feed is live but currently has no approved upcoming events. Check back soon or submit one.
+              No approved upcoming events in {cityName} yet. Tip the desk if you saw one, or check{" "}
+              <Link href="/cities/online" className="underline underline-offset-4 hover:text-primary">
+                Online events
+              </Link>
+              .
             </p>
-            <Link
-              href="/submit"
-              className="mt-6 inline-flex min-h-11 items-center border border-foreground bg-foreground px-5 text-xs font-semibold uppercase tracking-[0.12em] text-background hover:bg-primary"
-            >
-              Submit an event
-            </Link>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <MissingEventCta className="inline-flex min-h-11 items-center border border-foreground bg-foreground px-5 text-xs font-semibold uppercase tracking-[0.12em] text-background hover:bg-primary">
+                Missing an event?
+              </MissingEventCta>
+              <Link
+                href="/submit"
+                className="inline-flex min-h-11 items-center border border-foreground px-5 text-xs font-semibold uppercase tracking-[0.12em] hover:bg-foreground hover:text-background"
+              >
+                File a listing
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="grid border-l border-t border-foreground md:grid-cols-2 xl:grid-cols-3">

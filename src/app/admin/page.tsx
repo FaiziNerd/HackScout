@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight, LockKey, ShieldCheck } from "@phosphor-icons/react/dist/ssr";
 
@@ -12,9 +11,14 @@ import {
   type ReviewFilter,
 } from "@/lib/submissions";
 
-export const metadata: Metadata = {
+import { pageMetadata } from "@/lib/site";
+
+export const metadata = pageMetadata({
   title: "Review queue",
-};
+  description: "Admin review queue for HackScout submissions.",
+  path: "/admin",
+  noIndex: true,
+});
 
 interface PageProps {
   searchParams: Promise<{ status?: string }>;
@@ -81,13 +85,22 @@ export default async function AdminPage({ searchParams }: PageProps) {
               the map.
             </p>
           </div>
-          <Link
-            href="/admin/registrations"
-            className="inline-flex min-h-11 items-center gap-2 border-2 border-foreground px-4 text-[10px] font-semibold uppercase tracking-[0.12em]"
-          >
-            Signups ledger
-            <ArrowUpRight className="size-4" />
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/missing"
+              className="inline-flex min-h-11 items-center gap-2 border-2 border-foreground px-4 text-[10px] font-semibold uppercase tracking-[0.12em]"
+            >
+              Missing-event tips
+              <ArrowUpRight className="size-4" />
+            </Link>
+            <Link
+              href="/admin/registrations"
+              className="inline-flex min-h-11 items-center gap-2 border-2 border-foreground px-4 text-[10px] font-semibold uppercase tracking-[0.12em]"
+            >
+              Signups ledger
+              <ArrowUpRight className="size-4" />
+            </Link>
+          </div>
         </div>
 
         <nav className="mt-8 flex flex-wrap gap-2" aria-label="Queue filters">
@@ -113,7 +126,7 @@ export default async function AdminPage({ searchParams }: PageProps) {
         {events.length === 0 ? (
           <p className="mt-12 max-w-[48ch] border-l-4 border-primary pl-4 text-sm">
             {status === "pending"
-              ? "Inbox is clear. New /submit filings will land here."
+              ? "Inbox is clear. New /submit filings and missing-event tips wait in their trays."
               : `No ${status} events in this tray.`}
           </p>
         ) : (

@@ -1,17 +1,21 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr";
 
 import { EventCard } from "@/components/event-card";
 import { SiteHeader } from "@/components/site-header";
+import { WeeklyDigestPreferences } from "@/components/weekly-digest-preferences";
 import { getAuthUser } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { getSavedEvents } from "@/lib/saved-events";
+import { pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Saved events",
   description: "Listings you pinned on HackScout so registration deadlines do not slip.",
-};
+  path: "/saved",
+  noIndex: true,
+});
 
 export default async function SavedEventsPage() {
   const user = await getAuthUser();
@@ -19,7 +23,21 @@ export default async function SavedEventsPage() {
     redirect("/login?next=/saved");
   }
 
-  const events = await getSavedEvents(user.id);
+  const [events, cities, appUser] = await Promise.all([
+    getSavedEvents(user.id),
+    prisma.city.findMany({
+      select: { id: true, slug: true, name: true, province: true, isVirtual: true },
+      orderBy: [{ isVirtual: "desc" }, { name: "asc" }],
+    }),
+    prisma.user.findUnique({
+      where: { id: user.id },
+      select: { preferredCityIds: true },
+    }),
+  ]);
+  const preferenceValues = appUser?.preferredCityIds ?? [];
+  const initialDigestCityIds = cities
+    .filter((city) => preferenceValues.includes(city.id) || preferenceValues.includes(city.slug))
+    .map((city) => city.id);
 
   return (
     <div className="editorial-shell flex min-h-dvh flex-col bg-background text-foreground">
@@ -42,6 +60,11 @@ export default async function SavedEventsPage() {
       </header>
 
       <main className="mx-auto w-full max-w-[1500px] flex-1 px-4 py-10 sm:px-6 lg:px-10">
+        <WeeklyDigestPreferences
+          cities={cities}
+          initialCityIds={initialDigestCityIds}
+        />
+
         {events.length === 0 ? (
           <div className="border-2 border-foreground bg-card p-8">
             <BookmarkSimple aria-hidden className="size-8 text-primary" />

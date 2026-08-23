@@ -85,6 +85,7 @@ model User {
   savedEvents       SavedEvent[]
   registrations     Registration[]
   deadlineReminders DeadlineReminder[]
+  weeklyDigests     WeeklyDigest[]
 }
 
 model SavedEvent {
@@ -178,5 +179,35 @@ model DeadlineReminder {
 
   @@unique([userId, eventId, daysBefore])
   @@index([eventId])
+  @@index([status, createdAt])
+}
+
+model WeeklyDigest {
+  id         String         @id @default(cuid())
+  userId     String
+  weekOf     DateTime
+  status     ReminderStatus @default(pending)
+  eventCount Int
+  providerId String?
+  createdAt  DateTime       @default(now())
+  sentAt     DateTime?
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekOf])
+  @@index([status, createdAt])
+}
+
+model MissingEventReport {
+  id          String       @id @default(cuid())
+  title       String
+  citySlug    String?
+  cityName    String
+  sourceUrl   String?
+  description String?
+  pagePath    String?
+  status      ReviewStatus @default(pending)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
   @@index([status, createdAt])
 }

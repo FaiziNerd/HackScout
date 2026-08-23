@@ -1,15 +1,19 @@
-import type { Metadata } from "next";
+import Link from "next/link";
+import { LinkedinLogo } from "@phosphor-icons/react/dist/ssr";
 
 import { SiteHeader } from "@/components/site-header";
 import { SubmitEventForm, SubmitPageHero } from "@/components/submit-event-form";
 import { PAKISTAN_CITIES } from "@/lib/cities";
 import { prisma } from "@/lib/db";
 
-export const metadata: Metadata = {
-  title: "Submit an Event | HackScout",
+import { pageMetadata } from "@/lib/site";
+
+export const metadata = pageMetadata({
+  title: "Submit an Event",
   description:
     "Add your hackathon, developer meetup, or tech conference to HackScout's Pakistan directory.",
-};
+  path: "/submit",
+});
 
 export default async function SubmitPage() {
   const cities = await prisma.city.findMany({
@@ -40,6 +44,13 @@ export default async function SubmitPage() {
               </li>
             ))}
           </ol>
+          <Link
+            href="/submit/linkedin"
+            className="mt-6 flex min-h-11 items-center justify-between gap-3 border-2 border-foreground bg-card px-3 text-[10px] font-semibold uppercase tracking-[0.12em] hover:bg-muted"
+          >
+            Capture LinkedIn post
+            <LinkedinLogo className="size-4" weight="fill" />
+          </Link>
         </aside>
         <SubmitEventForm cities={options} />
       </main>

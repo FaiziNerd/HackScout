@@ -7,21 +7,22 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const cities = [
-  { name: "Karachi", slug: "karachi", province: "Sindh", coordinates: "24.8607° N / 67.0011° E", dispatch: "Mega coastal tech hub", count: 18, types: ["Fintech", "Hackathons", "AI / ML"] },
-  { name: "Lahore", slug: "lahore", province: "Punjab", coordinates: "31.5204° N / 74.3587° E", dispatch: "Startup and developer valley", count: 14, types: ["University cups", "Web3", "Founders"] },
-  { name: "Islamabad", slug: "islamabad", province: "ICT", coordinates: "33.6844° N / 73.0479° E", dispatch: "Federal AI and deep-tech desk", count: 9, types: ["Robotics", "GovTech", "Open source"] },
-  { name: "Rawalpindi", slug: "rawalpindi", province: "Punjab", coordinates: "33.5651° N / 73.0169° E", dispatch: "Twin-city technology grid", count: 5, types: ["Cybersecurity", "Game dev"] },
-  { name: "Faisalabad", slug: "faisalabad", province: "Punjab", coordinates: "31.4504° N / 73.1350° E", dispatch: "Industrial technology centre", count: 4, types: ["E-commerce", "Youth meetups"] },
-  { name: "Peshawar", slug: "peshawar", province: "Khyber Pakhtunkhwa", coordinates: "34.0151° N / 71.5249° E", dispatch: "Frontier technology circle", count: 3, types: ["App innovation", "Bootcamps"] },
-  { name: "Multan", slug: "multan", province: "Punjab", coordinates: "30.1575° N / 71.5249° E", dispatch: "South Punjab developer desk", count: 3, types: ["Cloud", "Design sprints"] },
-  { name: "Quetta", slug: "quetta", province: "Balochistan", coordinates: "30.1798° N / 66.9750° E", dispatch: "Emerging innovators bureau", count: 2, types: ["Student hackathons", "Workshops"] },
-  { name: "Hyderabad", slug: "hyderabad", province: "Sindh", coordinates: "25.3960° N / 68.3578° E", dispatch: "Sindh university circuit", count: 2, types: ["Code competitions"] },
-  { name: "Online", slug: "online", province: "Nationwide", coordinates: "REMOTE / PKT", dispatch: "National digital arena", count: 24, types: ["Global hackathons", "Virtual summits", "Webinars"] },
+  { name: "Karachi", slug: "karachi", province: "Sindh", coordinates: "24.8607° N / 67.0011° E", dispatch: "Mega coastal tech hub", types: ["Fintech", "Hackathons", "AI / ML"] },
+  { name: "Lahore", slug: "lahore", province: "Punjab", coordinates: "31.5204° N / 74.3587° E", dispatch: "Startup and developer valley", types: ["University cups", "Web3", "Founders"] },
+  { name: "Islamabad", slug: "islamabad", province: "ICT", coordinates: "33.6844° N / 73.0479° E", dispatch: "Federal AI and deep-tech desk", types: ["Robotics", "GovTech", "Open source"] },
+  { name: "Rawalpindi", slug: "rawalpindi", province: "Punjab", coordinates: "33.5651° N / 73.0169° E", dispatch: "Twin-city technology grid", types: ["Cybersecurity", "Game dev"] },
+  { name: "Faisalabad", slug: "faisalabad", province: "Punjab", coordinates: "31.4504° N / 73.1350° E", dispatch: "Industrial technology centre", types: ["E-commerce", "Youth meetups"] },
+  { name: "Peshawar", slug: "peshawar", province: "Khyber Pakhtunkhwa", coordinates: "34.0151° N / 71.5249° E", dispatch: "Frontier technology circle", types: ["App innovation", "Bootcamps"] },
+  { name: "Multan", slug: "multan", province: "Punjab", coordinates: "30.1575° N / 71.5249° E", dispatch: "South Punjab developer desk", types: ["Cloud", "Design sprints"] },
+  { name: "Quetta", slug: "quetta", province: "Balochistan", coordinates: "30.1798° N / 66.9750° E", dispatch: "Emerging innovators bureau", types: ["Student hackathons", "Workshops"] },
+  { name: "Hyderabad", slug: "hyderabad", province: "Sindh", coordinates: "25.3960° N / 68.3578° E", dispatch: "Sindh university circuit", types: ["Code competitions"] },
+  { name: "Online", slug: "online", province: "Nationwide", coordinates: "REMOTE / PKT", dispatch: "National digital arena", types: ["Global hackathons", "Virtual summits", "Webinars"] },
 ];
 
-export function CityIndex() {
+export function CityIndex({ counts = {} }: { counts?: Record<string, number> }) {
   const [active, setActive] = useState(0);
   const current = cities[active] ?? cities[0];
+  const currentCount = counts[current.slug] ?? 0;
 
   return (
     <section className="border-b-2 border-foreground">
@@ -68,7 +69,7 @@ export function CityIndex() {
                       </span>
                     </span>
                     <span className={cn("grid size-9 place-items-center border font-mono text-xs font-semibold", isActive ? "border-primary bg-primary text-primary-foreground" : "border-foreground")}>
-                      {city.count}
+                      {counts[city.slug] ?? 0}
                     </span>
                   </button>
                 );
@@ -100,7 +101,7 @@ export function CityIndex() {
 
             <div className="relative">
               <div className="grid grid-cols-[auto_1fr] gap-5 border-y border-primary-foreground/50 py-5">
-                <span className="font-heading text-6xl font-semibold">{current.count}</span>
+                <span className="font-heading text-6xl font-semibold">{currentCount}</span>
                 <div>
                   <p className="text-sm font-semibold">Open registrations</p>
                   <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.14em] text-primary-foreground/70">

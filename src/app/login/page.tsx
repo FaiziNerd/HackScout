@@ -1,14 +1,17 @@
-import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
 
 import { LoginForm } from "@/components/login-form";
 import { SiteHeader } from "@/components/site-header";
 
-export const metadata: Metadata = {
+import { pageMetadata } from "@/lib/site";
+
+export const metadata = pageMetadata({
   title: "Sign in",
   description: "Sign in to HackScout with Google or email to save events and get deadline alerts.",
-};
+  path: "/login",
+  noIndex: true,
+});
 
 export default function LoginPage() {
   return (

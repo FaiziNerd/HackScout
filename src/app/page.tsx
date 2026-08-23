@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -16,15 +15,20 @@ import { CityIndex } from "@/components/landing/city-index";
 import { HeroCopy, Reveal } from "@/components/landing/hero-motion";
 import { SiteHeader } from "@/components/site-header";
 import { buttonVariants } from "@/components/ui/button";
+import { formatCategory, formatDeadlineLabel, getAllCityEventCounts, getFeedStats, getUpcomingEvents } from "@/lib/events";
+import { pageMetadata } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
+export const revalidate = 3600;
+
+export const metadata = pageMetadata({
   title: "HackScout — Pakistan's Developer & Tech Event Hub",
   description:
     "Every hackathon, developer conference, workshop, and meetup across Pakistan. Curated by city, sorted by registration deadlines.",
-};
+  path: "/",
+});
 
-const closingSoon = [
+const FALLBACK_CLOSING = [
   {
     number: "01",
     title: "FAST National Hackathon 2026",
@@ -163,7 +167,30 @@ const faqs = [
   },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const [stats, closingEvents, cityCountMap] = await Promise.all([
+    getFeedStats(),
+    getUpcomingEvents({ limit: 4 }),
+    getAllCityEventCounts(),
+  ]);
+  const cityCounts = Object.fromEntries(cityCountMap);
+  const closingSoon =
+    closingEvents.length > 0
+      ? closingEvents.map((event, index) => ({
+          number: String(index + 1).padStart(2, "0"),
+          title: event.title,
+          host: event.organizerName || event.city.name,
+          city: event.city.name,
+          type: formatCategory(event.category),
+          deadline: formatDeadlineLabel(event.registrationDeadline).label,
+          detail: event.prizePool || event.venue || "Open registration",
+          href: `/events/${event.slug}`,
+        }))
+      : FALLBACK_CLOSING;
+  const heroCount =
+    stats.eventCount > 0
+      ? `${stats.eventCount} open registrations / ${stats.cityCount} ${stats.cityCount === 1 ? "city" : "cities"}`
+      : "Launching nationwide radar";
   return (
     <div className="editorial-shell flex min-h-dvh flex-col bg-background text-foreground">
       <SiteHeader />
@@ -180,7 +207,7 @@ export default function LandingPage() {
                       <Radio className="size-3" weight="fill" />
                       Live Pakistan event radar
                     </span>
-                    <span>85+ open registrations / 10 cities</span>
+                    <span> {heroCount}</span>
                   </div>
 
                   <div className="grid gap-8 py-10 md:grid-cols-[minmax(0,1fr)_11rem] md:items-end">
@@ -336,7 +363,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <CityIndex />
+        <CityIndex counts={cityCounts} />
 
         <section className="border-b-2 border-foreground">
           <div className="mx-auto max-w-[1500px] px-4 py-14 sm:px-6 lg:px-10 lg:py-20">
@@ -520,15 +547,23 @@ export default function LandingPage() {
                 alerts and the weekly campus digest.
               </p>
             </div>
-            <Link
-              href="/submit"
-              className={cn(
-                buttonVariants({ size: "lg" }),
-                "h-12 rounded-none border border-primary-foreground bg-primary-foreground px-6 text-xs font-semibold uppercase tracking-[0.12em] text-primary hover:bg-foreground hover:text-background"
-              )}
-            >
-              File a listing <ArrowUpRight />
-            </Link>
+            <div className="flex flex-col gap-3">
+              <Link
+                href="/submit"
+                className={cn(
+                  buttonVariants({ size: "lg" }),
+                  "h-12 rounded-none border border-primary-foreground bg-primary-foreground px-6 text-xs font-semibold uppercase tracking-[0.12em] text-primary hover:bg-foreground hover:text-background"
+                )}
+              >
+                File a listing <ArrowUpRight />
+              </Link>
+              <Link
+                href="/missing"
+                className="inline-flex min-h-11 items-center justify-center text-[10px] font-semibold uppercase tracking-[0.14em] underline underline-offset-4"
+              >
+                Missing an event?
+              </Link>
+            </div>
           </div>
         </section>
       </main>
@@ -545,6 +580,7 @@ export default function LandingPage() {
             <Link href="/events" className="hover:text-primary-foreground">Events</Link>
             <Link href="/cities" className="hover:text-primary-foreground">Cities</Link>
             <Link href="/submit" className="hover:text-primary-foreground">Submit</Link>
+            <Link href="/missing" className="hover:text-primary-foreground">Missing an event?</Link>
             <span>© {new Date().getFullYear()}</span>
           </div>
         </div>

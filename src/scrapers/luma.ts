@@ -4,12 +4,10 @@ import { normalizeCity, PAKISTAN_CITIES } from "@/lib/cities";
 import type { ScrapedEventInput, ScraperResult } from "./types";
 
 const LUMA_BASE_URL = "https://lu.ma";
-const DEFAULT_LUMA_PAGE_URLS = [
-  "https://lu.ma/discover",
-  "https://lu.ma/genai-collective",
-  "https://lu.ma/uetlahore?k=c",
-];
-const MAX_DETAIL_FETCHES = Number(process.env.LUMA_DETAIL_FETCH_LIMIT ?? 25);
+const LUMA_DISCOVER_PAGE_LIMIT = Number(process.env.LUMA_DISCOVER_PAGE_LIMIT ?? 30);
+const REQUIRE_PAKISTAN_MATCH = process.env.LUMA_REQUIRE_PAKISTAN_MATCH !== "false";
+const DEFAULT_LUMA_PAGE_URLS = ["https://lu.ma/genai-collective", "https://lu.ma/uetlahore?k=c"];
+const MAX_DETAIL_FETCHES = Number(process.env.LUMA_DETAIL_FETCH_LIMIT ?? 500);
 
 interface LumaGeoAddressInfo {
   city?: string | null;
@@ -111,6 +109,10 @@ function slugToPageUrl(slugOrUrl: string): string {
 }
 
 function configuredUrls(): string[] {
+  const discoverPages = Array.from({ length: Math.max(1, LUMA_DISCOVER_PAGE_LIMIT) }, (_, index) => {
+    const page = index + 1;
+    return page === 1 ? `${LUMA_BASE_URL}/discover` : `${LUMA_BASE_URL}/discover?page=${page}`;
+  });
   const extraUrls = [
     process.env.LUMA_PAGE_URLS,
     process.env.LUMA_CALENDAR_SLUGS?.split(",")
@@ -125,7 +127,7 @@ function configuredUrls(): string[] {
     .map((url) => url.trim())
     .filter(Boolean);
 
-  return Array.from(new Set([...DEFAULT_LUMA_PAGE_URLS, ...extraUrls]));
+  return Array.from(new Set([...discoverPages, ...DEFAULT_LUMA_PAGE_URLS, ...extraUrls]));
 }
 
 function cleanText(value?: string | null): string {
@@ -392,6 +394,9 @@ async function hydrateItem(item: LumaFeaturedItem): Promise<LumaFeaturedItem> {
 export async function scrapeLuma(): Promise<ScraperResult> {
   const errors: string[] = [];
   const candidates = new Map<string, LumaFeaturedItem>();
+  let filteredOut = 0;
+  let matchedPakistan = 0;
+  let invalidMapped = 0;
 
   for (const url of configuredUrls()) {
     try {
@@ -425,15 +430,29 @@ export async function scrapeLuma(): Promise<ScraperResult> {
     }
 
     const { isRelevant, rawLocation, isOnline } = isRelevantToPakistan(hydrated);
-    if (!isRelevant) continue;
+    if (REQUIRE_PAKISTAN_MATCH && !isRelevant) {
+      filteredOut++;
+      continue;
+    }
+    if (isRelevant) {
+      matchedPakistan++;
+    }
 
     const mapped = mapLumaToScrapedInput(hydrated, rawLocation, isOnline);
     if (mapped) events.set(mapped.sourceUrl, mapped);
+    else invalidMapped++;
   }
 
   return {
     source: "luma",
     events: Array.from(events.values()),
     errors: errors.length ? errors : undefined,
+    stats: {
+      candidatesFound: candidates.size,
+      detailHydrated: detailFetches,
+      matchedPakistan,
+      filteredOut,
+      invalidMapped,
+    },
   };
 }

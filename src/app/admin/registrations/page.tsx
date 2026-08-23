@@ -1,14 +1,17 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, LockKey, Table } from "@phosphor-icons/react/dist/ssr";
 
 import { SiteHeader } from "@/components/site-header";
 import { getAdminUser } from "@/lib/admin";
 import { getNativeEventsWithCounts } from "@/lib/registrations";
+import { pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata = pageMetadata({
   title: "Signups desk",
-};
+  description: "Admin desk for native event registrations.",
+  path: "/admin/registrations",
+  noIndex: true,
+});
 
 export default async function AdminRegistrationsPage() {
   const admin = await getAdminUser();

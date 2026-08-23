@@ -1,21 +1,23 @@
-import type { Metadata } from "next";
+import type { EventCategory } from "@/generated/prisma/client";
 import Link from "next/link";
 import { ArrowUpRight, Globe, MagnifyingGlass, MapPin } from "@phosphor-icons/react/dist/ssr";
 
 import { EventCard } from "@/components/event-card";
+import { MissingEventCta } from "@/components/missing-event-cta";
 import { SiteHeader } from "@/components/site-header";
 import { Input } from "@/components/ui/input";
-import type { EventCategory } from "@/generated/prisma/client";
 import { getAuthUser } from "@/lib/auth";
 import { getCityEventCounts, getFeedStats, getUpcomingEvents } from "@/lib/events";
 import { getSavedEventIds } from "@/lib/saved-events";
+import { pageMetadata } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Explore Tech Events in Pakistan | HackScout",
+export const metadata = pageMetadata({
+  title: "Explore Tech Events in Pakistan",
   description:
     "Browse hackathons, conferences, and developer meetups across Karachi, Lahore, Islamabad, and all of Pakistan.",
-};
+  path: "/events",
+});
 
 const CATEGORY_FILTERS: { label: string; value?: EventCategory }[] = [
   { label: "All categories" },
@@ -270,14 +272,19 @@ export default async function EventsFeedPage({ searchParams }: PageProps) {
           <div className="paper-grid border-2 border-foreground bg-card p-8 text-center sm:p-16">
             <p className="font-heading text-4xl font-semibold">No signal on this frequency.</p>
             <p className="mx-auto mt-3 max-w-[50ch] text-sm leading-relaxed text-muted-foreground">
-              Try a wider city or category filter, run the scrapers, or add an event that should be here.
+              Try a wider city or category filter, or tip the desk if an event should already be here.
             </p>
-            <Link
-              href="/submit"
-              className="mt-6 inline-flex min-h-11 items-center border border-foreground bg-foreground px-5 text-xs font-semibold uppercase tracking-[0.12em] text-background hover:bg-primary"
-            >
-              Submit an event
-            </Link>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <MissingEventCta className="inline-flex min-h-11 items-center border border-foreground bg-foreground px-5 text-xs font-semibold uppercase tracking-[0.12em] text-background hover:bg-primary">
+                Missing an event?
+              </MissingEventCta>
+              <Link
+                href="/submit"
+                className="inline-flex min-h-11 items-center border border-foreground px-5 text-xs font-semibold uppercase tracking-[0.12em] hover:bg-foreground hover:text-background"
+              >
+                File a listing
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="grid border-l border-t border-foreground md:grid-cols-2 xl:grid-cols-3">
@@ -293,6 +300,34 @@ export default async function EventsFeedPage({ searchParams }: PageProps) {
           </div>
         )}
         </section>
+
+        <aside className="mt-14 border-2 border-foreground bg-card lg:mt-20">
+          <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-end">
+            <div>
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">
+                Coverage loop / community desk
+              </p>
+              <h2 className="mt-2 max-w-[16ch] font-heading text-4xl font-semibold tracking-[-0.04em] sm:text-5xl">
+                Missing an event? Add it.
+              </h2>
+              <p className="mt-3 max-w-[52ch] text-sm leading-relaxed text-muted-foreground">
+                If a campus poster, LinkedIn post, or WhatsApp forward never reached the index, send a 30-second
+                tip. We verify, then it lands on the city desk.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <MissingEventCta className="inline-flex min-h-12 items-center justify-center border border-foreground bg-primary px-5 text-xs font-semibold uppercase tracking-[0.12em] text-primary-foreground hover:bg-brand-hover">
+                Tip the desk
+              </MissingEventCta>
+              <Link
+                href="/submit"
+                className="inline-flex min-h-12 items-center justify-center border border-foreground px-5 text-xs font-semibold uppercase tracking-[0.12em] hover:bg-foreground hover:text-background"
+              >
+                File a full listing
+              </Link>
+            </div>
+          </div>
+        </aside>
       </main>
     </div>
   );
