@@ -1,4 +1,5 @@
 import { normalizeCity } from "@/lib/cities";
+import { formatPrizePool } from "@/lib/utils";
 import type { ScrapedEventInput, NormalizedScrapedEvent } from "./types";
 
 /**
@@ -54,7 +55,7 @@ export function normalizeScrapedEvent(input: ScrapedEventInput): NormalizedScrap
     venue: input.venue || null,
     isOnline,
     tags: input.tags || [],
-    prizePool: input.prizePool || null,
+    prizePool: formatPrizePool(input.prizePool),
     organizerName: input.organizerName || null,
     registrationType: input.registrationType || "external",
     registrationUrl: input.registrationUrl || input.sourceUrl,

@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import "dotenv/config";
+
 const siteUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL;
 const citySlug = process.env.CITY_SLUG || "lahore";
 const cityName = process.env.CITY_NAME || "Lahore";

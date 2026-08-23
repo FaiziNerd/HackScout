@@ -27,7 +27,7 @@ Deploy HackScout to production with a working web app, worker, database, auth ca
 - `RESEND_API_KEY`
 - `DEADLINE_EMAIL_FROM`
 - `ADMIN_EMAILS`
-- `OPENAI_API_KEY`
+- `GROQ_API_KEY`
 
 ## 3) Worker Deployment (Render or Railway)
 - Deploy a dedicated worker service from same repo.

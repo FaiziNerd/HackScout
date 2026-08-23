@@ -7,6 +7,7 @@ import { DeadlineBadge } from "@/components/deadline-badge";
 import { SaveEventButton } from "@/components/save-event-button";
 import type { City, Event } from "@/generated/prisma/client";
 import { formatEventDateRange, SOURCE_LABELS } from "@/lib/events";
+import { formatPrizePool } from "@/lib/utils";
 
 export type EventWithCity = Event & { city: City };
 
@@ -19,6 +20,7 @@ export interface EventCardProps {
 
 export function EventCard({ event, index = 1, saved = false, signedIn = false }: EventCardProps) {
   const sourceLabel = SOURCE_LABELS[event.source];
+  const prizePool = formatPrizePool(event.prizePool);
 
   return (
     <article className="group relative flex min-h-[27rem] flex-col border-b border-r border-foreground bg-background transition-colors hover:bg-card">
@@ -60,13 +62,13 @@ export function EventCard({ event, index = 1, saved = false, signedIn = false }:
                 {formatEventDateRange(event.startDate, event.endDate)}
               </dd>
             </div>
-            {event.prizePool && (
+            {prizePool && (
               <div className="grid grid-cols-[6rem_1fr] gap-3 py-3">
                 <dt className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
                   <Star aria-hidden className="size-4 text-primary" />
                   Prize
                 </dt>
-                <dd className="text-right font-semibold text-primary">{event.prizePool}</dd>
+                <dd className="text-right font-semibold text-primary">{prizePool}</dd>
               </div>
             )}
           </dl>

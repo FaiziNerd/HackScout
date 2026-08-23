@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-import { Client } from "pg";
+import "dotenv/config";
+import { createPostgresClient } from "./postgres.mjs";
 
 const directUrl = process.env.DIRECT_URL || process.env.DATABASE_URL;
 
@@ -15,10 +16,7 @@ async function scalar(client, query, values = []) {
 }
 
 async function run() {
-  const client = new Client({
-    connectionString: directUrl,
-    ssl: { rejectUnauthorized: false },
-  });
+  const client = createPostgresClient(directUrl);
 
   await client.connect();
 

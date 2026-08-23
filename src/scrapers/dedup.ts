@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { formatPrizePool } from "@/lib/utils";
 import type { NormalizedScrapedEvent } from "./types";
 import type { Event } from "@/generated/prisma/client";
 
@@ -152,7 +153,7 @@ export async function saveOrMergeScrapedEvent(
         lastScrapedAt: new Date(),
         // Backfill empty fields if the new scrape provides them
         coverImage: existing.coverImage || event.coverImage,
-        prizePool: existing.prizePool || event.prizePool,
+        prizePool: formatPrizePool(existing.prizePool) || event.prizePool,
         organizerName: existing.organizerName || event.organizerName,
         venue: existing.venue || event.venue,
         registrationDeadline: existing.registrationDeadline || event.registrationDeadline,

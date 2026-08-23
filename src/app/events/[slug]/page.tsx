@@ -28,6 +28,7 @@ import { parseFormFields } from "@/lib/registration-form";
 import { getSavedEventIds } from "@/lib/saved-events";
 import { eventJsonLd, eventShareText } from "@/lib/seo";
 import { absoluteUrl, pageMetadata, truncateText } from "@/lib/site";
+import { formatPrizePool } from "@/lib/utils";
 
 interface EventDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -107,6 +108,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     registrationDeadline: event.registrationDeadline,
   });
   const extraSources = event.sources.filter((item) => item !== event.source);
+  const prizePool = formatPrizePool(event.prizePool);
 
   return (
     <div className="editorial-shell flex min-h-dvh flex-col bg-background text-foreground">
@@ -171,13 +173,13 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
                   {event.venue ? ` · ${event.venue}` : event.isOnline ? " · Online" : null}
                 </dd>
               </div>
-              {event.prizePool && (
+              {prizePool && (
                 <div className="grid gap-2 py-4 sm:grid-cols-[10rem_1fr]">
                   <dt className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
                     <Star aria-hidden className="size-4 text-primary" />
                     Prize
                   </dt>
-                  <dd className="font-semibold text-primary">{event.prizePool}</dd>
+                  <dd className="font-semibold text-primary">{prizePool}</dd>
                 </div>
               )}
               <div className="grid gap-2 py-4 sm:grid-cols-[10rem_1fr]">

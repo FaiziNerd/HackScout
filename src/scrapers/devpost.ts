@@ -1,5 +1,6 @@
 import type { ScrapedEventInput, ScraperResult } from "./types";
 import { normalizeCity } from "@/lib/cities";
+import { formatPrizePool } from "@/lib/utils";
 import { PAKISTAN_SEARCH_QUERIES } from "./queries";
 
 interface DevpostHackathonItem {
@@ -202,8 +203,8 @@ function mapDevpostToScrapedInput(
     }
   }
 
-  // Prize pool format (e.g. "$10,000 in prizes")
-  const prizePool = item.prize_amount && item.prize_amount.trim() ? item.prize_amount.trim() : null;
+  // Devpost returns HTML such as `$<span data-currency-value>175</span>`
+  const prizePool = formatPrizePool(item.prize_amount);
 
   return {
     title: item.title,

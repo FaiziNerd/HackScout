@@ -89,12 +89,16 @@ process.on("SIGTERM", () => {
   void shutdown("SIGTERM");
 });
 
-try {
-  await ensureScraperSchedule();
-  console.log(
-    `[scrapers] worker listening on "${SCRAPER_QUEUE_NAME}" (schedule: ${SCRAPER_CRON_PATTERN} UTC)`,
-  );
-} catch (error) {
-  console.error("[scrapers] failed to register 6-hour schedule:", error);
-  await shutdown("startup-error");
+async function main() {
+  try {
+    await ensureScraperSchedule();
+    console.log(
+      `[scrapers] worker listening on "${SCRAPER_QUEUE_NAME}" (schedule: ${SCRAPER_CRON_PATTERN} UTC)`,
+    );
+  } catch (error) {
+    console.error("[scrapers] failed to register 6-hour schedule:", error);
+    await shutdown("startup-error");
+  }
 }
+
+void main();

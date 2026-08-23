@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
-import { Client } from "pg";
+import "dotenv/config";
 import IORedis from "ioredis";
+import { createPostgresClient } from "./postgres.mjs";
 
 const databaseUrl = process.env.DATABASE_URL;
 const directUrl = process.env.DIRECT_URL;
@@ -18,10 +19,7 @@ if (!redisUrl) {
 }
 
 async function checkPostgres(label, connectionString) {
-  const client = new Client({
-    connectionString,
-    ssl: { rejectUnauthorized: false },
-  });
+  const client = createPostgresClient(connectionString);
 
   await client.connect();
   const result = await client.query("select 1 as ok");

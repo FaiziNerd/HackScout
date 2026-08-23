@@ -31,6 +31,27 @@ const SCRAPERS: ReadonlyArray<{
   { source: "university", scrape: scrapeUniversity },
 ];
 
+const DEFAULT_SCRAPER_TIMEOUT_MS = 90_000;
+
+function scraperTimeoutMs() {
+  const configured = Number(process.env.SCRAPER_SOURCE_TIMEOUT_MS);
+  return Number.isFinite(configured) && configured > 0 ? configured : DEFAULT_SCRAPER_TIMEOUT_MS;
+}
+
+function withTimeout<T>(promise: Promise<T>, source: EventSource, timeoutMs: number): Promise<T> {
+  let timeout: NodeJS.Timeout | undefined;
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeout = setTimeout(() => {
+      reject(new Error(`${source} scraper timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+  });
+
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    if (timeout) clearTimeout(timeout);
+  });
+}
+
 export interface SourceRunSummary {
   source: EventSource;
   status: ScrapeStatus;
@@ -55,7 +76,10 @@ export function toRunAllScrapersJobResult(
 
 /** Runs all source scrapers and preserves partial results if a source fails. */
 export async function runAllScrapers(): Promise<ScraperResult[]> {
-  const results = await Promise.allSettled(SCRAPERS.map(({ scrape }) => scrape()));
+  const timeoutMs = scraperTimeoutMs();
+  const results = await Promise.allSettled(
+    SCRAPERS.map(({ source, scrape }) => withTimeout(scrape(), source, timeoutMs)),
+  );
 
   return results.map((result, index) => {
     if (result.status === "fulfilled") return result.value;

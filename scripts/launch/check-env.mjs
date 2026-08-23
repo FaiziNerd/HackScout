@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import "dotenv/config";
+
 const required = [
   "DATABASE_URL",
   "DIRECT_URL",
@@ -15,7 +17,7 @@ const recommended = [
   "RESEND_API_KEY",
   "DEADLINE_EMAIL_FROM",
   "ADMIN_EMAILS",
-  "OPENAI_API_KEY",
+  "GROQ_API_KEY",
 ];
 
 function isFilled(key) {

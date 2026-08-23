@@ -17,7 +17,7 @@ import { SiteHeader } from "@/components/site-header";
 import { buttonVariants } from "@/components/ui/button";
 import { formatCategory, formatDeadlineLabel, getAllCityEventCounts, getFeedStats, getUpcomingEvents } from "@/lib/events";
 import { pageMetadata } from "@/lib/site";
-import { cn } from "@/lib/utils";
+import { cn, formatPrizePool } from "@/lib/utils";
 
 export const revalidate = 3600;
 
@@ -183,7 +183,7 @@ export default async function LandingPage() {
           city: event.city.name,
           type: formatCategory(event.category),
           deadline: formatDeadlineLabel(event.registrationDeadline).label,
-          detail: event.prizePool || event.venue || "Open registration",
+          detail: formatPrizePool(event.prizePool) || event.venue || "Open registration",
           href: `/events/${event.slug}`,
         }))
       : FALLBACK_CLOSING;

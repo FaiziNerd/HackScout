@@ -709,7 +709,7 @@ hackscout/
 
 #### 3. Production environment setup
 - Required: `DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SITE_URL`, `CRON_SECRET`, `REDIS_URL`
-- Recommended: `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `DEADLINE_EMAIL_FROM`, `ADMIN_EMAILS`, `OPENAI_API_KEY`
+- Recommended: `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `DEADLINE_EMAIL_FROM`, `ADMIN_EMAILS`, `GROQ_API_KEY`
 - Confirm Vercel + worker both use production values (not staging/local leftovers)
 
 #### 4. Auth production config
