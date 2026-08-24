@@ -14,7 +14,15 @@ type HeaderUser = {
   name: string | null;
 };
 
-export function AuthNav() {
+type AuthNavProps = {
+  variant?: "bar" | "panel";
+  onNavigate?: () => void;
+};
+
+const panelLinkClass =
+  "flex min-h-14 items-center justify-between border-b border-foreground/30 px-1 text-sm font-semibold uppercase tracking-[0.14em] outline-none hover:bg-muted focus-visible:bg-muted";
+
+export function AuthNav({ variant = "bar", onNavigate }: AuthNavProps) {
   const pathname = usePathname();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [user, setUser] = useState<HeaderUser | null | undefined>(() =>
@@ -62,11 +70,34 @@ export function AuthNav() {
   }, [supabase]);
 
   if (user === undefined) {
-    return <div className="hidden h-11 w-[4.5rem] sm:block" aria-hidden />;
+    if (variant === "panel") {
+      return <div className="h-14 border-b border-foreground/30" aria-hidden />;
+    }
+    return <div className="hidden h-11 w-[4.5rem] md:block" aria-hidden />;
   }
 
   if (user) {
     const label = user.name?.split(" ")[0] ?? user.email.split("@")[0];
+
+    if (variant === "panel") {
+      return (
+        <form action="/auth/sign-out" method="post" className="flex flex-col">
+          <Link href="/saved" onClick={onNavigate} className={panelLinkClass}>
+            Saved
+            <span className="font-mono text-[10px] font-normal tracking-[0.16em] text-muted-foreground">
+              Desk
+            </span>
+          </Link>
+          <p className="border-b border-foreground/30 px-1 py-3 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+            Signed in as {label}
+          </p>
+          <button type="submit" className={cn(panelLinkClass, "w-full text-left")}>
+            Sign out
+            <SignOut aria-hidden className="size-4" />
+          </button>
+        </form>
+      );
+    }
 
     return (
       <form action="/auth/sign-out" method="post" className="flex items-center gap-2">
@@ -77,7 +108,7 @@ export function AuthNav() {
           Saved
         </Link>
         <span
-          className="hidden max-w-[8rem] truncate font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground sm:inline"
+          className="hidden max-w-[8rem] truncate font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground lg:inline"
           title={user.email}
         >
           {label}
@@ -95,6 +126,17 @@ export function AuthNav() {
 
   if (pathname === "/login") {
     return null;
+  }
+
+  if (variant === "panel") {
+    return (
+      <Link href="/login" onClick={onNavigate} className={panelLinkClass}>
+        Sign in
+        <span className="font-mono text-[10px] font-normal tracking-[0.16em] text-muted-foreground">
+          Account
+        </span>
+      </Link>
+    );
   }
 
   return (
