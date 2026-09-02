@@ -49,9 +49,64 @@ async function checkCallbackRoute() {
   console.log("OK   /auth/callback route exists and redirects without code.");
 }
 
+async function checkAuthProviders() {
+  const response = await fetch(`${supabaseUrl.replace(/\/$/, "")}/auth/v1/settings`, {
+    method: "GET",
+    headers: {
+      apikey: anonKey,
+      Authorization: `Bearer ${anonKey}`,
+    },
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Supabase auth settings failed (${response.status}): ${body}`);
+  }
+
+  const settings = await response.json();
+  if (!settings.external?.google) {
+    throw new Error("Google provider is not enabled in Supabase Auth.");
+  }
+
+  if (!settings.external?.email) {
+    throw new Error("Email provider is not enabled in Supabase Auth.");
+  }
+
+  console.log("OK   Supabase Google and email providers are enabled.");
+}
+
+async function checkGoogleOAuthRedirect() {
+  const redirectTo = `${base}/auth/callback`;
+  const authorizeUrl = new URL(`${supabaseUrl.replace(/\/$/, "")}/auth/v1/authorize`);
+  authorizeUrl.searchParams.set("provider", "google");
+  authorizeUrl.searchParams.set("redirect_to", redirectTo);
+
+  const response = await fetch(authorizeUrl, {
+    redirect: "manual",
+    headers: {
+      apikey: anonKey,
+      Authorization: `Bearer ${anonKey}`,
+    },
+  });
+
+  if (response.status !== 302 && response.status !== 303) {
+    const body = await response.text();
+    throw new Error(`Google authorize expected redirect, got ${response.status}: ${body}`);
+  }
+
+  const location = response.headers.get("location");
+  if (!location?.startsWith("https://accounts.google.com/")) {
+    throw new Error(`Google authorize redirect target unexpected: ${location || "none"}`);
+  }
+
+  console.log("OK   Google OAuth authorize redirects to accounts.google.com.");
+}
+
 async function run() {
   console.log("HackScout auth readiness check");
   await checkSupabaseAuthHealth();
+  await checkAuthProviders();
+  await checkGoogleOAuthRedirect();
   await checkCallbackRoute();
   console.log("\nPass: auth dependencies and callback route checks completed.");
 }

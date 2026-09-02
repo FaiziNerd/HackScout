@@ -21,8 +21,10 @@
     "launch:data:check": "node scripts/launch/check-data.mjs",
     "launch:auth:check": "node scripts/launch/check-auth.mjs",
     "launch:qa:check": "node scripts/launch/check-qa.mjs",
+    "launch:smoke:check": "node scripts/launch/check-smoke.mjs",
     "launch:cron:check": "node scripts/launch/check-cron.mjs",
-    "launch:check:all": "npm run launch:env:check && npm run launch:runtime:check && npm run launch:auth:check && npm run launch:data:check && npm run launch:cron:check && npm run launch:qa:check"
+    "launch:worker:check": "node scripts/launch/check-worker.mjs",
+    "launch:check:all": "npm run launch:env:check && npm run launch:runtime:check && npm run launch:auth:check && npm run launch:data:check && npm run launch:cron:check && npm run launch:worker:check && npm run launch:smoke:check && npm run launch:qa:check"
   },
   "dependencies": {
     "@ai-sdk/groq": "^4.0.30",
