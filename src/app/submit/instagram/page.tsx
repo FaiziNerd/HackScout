@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
 
-import { LinkedInCaptureForm } from "@/components/linkedin-capture-form";
+import { InstagramCaptureForm } from "@/components/instagram-capture-form";
 import { SiteHeader } from "@/components/site-header";
 import { PAKISTAN_CITIES } from "@/lib/cities";
 import { prisma } from "@/lib/db";
@@ -9,20 +9,20 @@ import { prisma } from "@/lib/db";
 import { pageMetadata } from "@/lib/site";
 
 export const metadata = pageMetadata({
-  title: "Capture LinkedIn Event",
+  title: "Capture Instagram Event",
   description:
-    "Turn a public LinkedIn event announcement into a structured HackScout listing for review.",
-  path: "/submit/linkedin",
+    "Turn a public Instagram event announcement into a structured HackScout listing for review.",
+  path: "/submit/instagram",
 });
 
 const discoveryQueries = [
-  "site:linkedin.com/posts hackathon Pakistan registration deadline",
-  "site:linkedin.com/posts conference Karachi register",
-  "site:linkedin.com/posts workshop Lahore registration open",
-  "site:linkedin.com/posts university event Islamabad apply by",
+  "site:instagram.com hackathon Pakistan registration deadline",
+  "site:instagram.com conference Karachi register",
+  "site:instagram.com workshop Lahore registration open",
+  "site:instagram.com university event Islamabad apply by",
 ];
 
-export default async function LinkedInSubmitPage() {
+export default async function InstagramSubmitPage() {
   const cities = await prisma.city.findMany({
     select: { slug: true, name: true, province: true, isVirtual: true },
     orderBy: [{ isVirtual: "desc" }, { name: "asc" }],
@@ -45,15 +45,15 @@ export default async function LinkedInSubmitPage() {
                 Back to full form
               </Link>
               <div className="mt-5 border-y border-foreground py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
-                LinkedIn post capture / no login scraping
+                Instagram post capture / no login scraping
               </div>
               <h1 className="mt-8 max-w-[11ch] font-heading text-[clamp(4rem,9vw,8rem)] font-medium leading-[0.78] tracking-[-0.06em]">
                 Catch posts before they vanish.
               </h1>
             </div>
             <p className="border-l-4 border-primary pl-4 text-sm font-medium leading-relaxed">
-              Paste a LinkedIn URL or copied text. HackScout extracts a draft with AI, then you verify it
-              before it reaches the admin review queue.
+              Paste an Instagram URL or copied caption. HackScout extracts a draft with AI, then you
+              verify it before it reaches the admin review queue.
             </p>
           </div>
         </div>
@@ -67,7 +67,7 @@ export default async function LinkedInSubmitPage() {
           </p>
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
             Use public search results to find candidate posts. Open the post, then paste its URL or
-            text here.
+            caption here.
           </p>
           <div className="mt-5 grid gap-3">
             {discoveryQueries.map((query) => (
@@ -83,7 +83,7 @@ export default async function LinkedInSubmitPage() {
             ))}
           </div>
         </aside>
-        <LinkedInCaptureForm cities={options} />
+        <InstagramCaptureForm cities={options} />
       </main>
     </div>
   );

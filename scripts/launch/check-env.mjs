@@ -45,6 +45,19 @@ console.log("\nSummary");
 console.log(`Required missing: ${requiredMissing}`);
 console.log(`Recommended missing: ${recommendedMissing}`);
 
+const scraperOptional = [
+  "FACEBOOK_EVENT_URLS",
+  "FACEBOOK_PAGE_URLS",
+  "LUMA_PAGE_URLS",
+  "LUMA_CALENDAR_SLUGS",
+];
+
+console.log("\nScraper coverage (optional — warn if empty in production)");
+for (const key of scraperOptional) {
+  const ok = isFilled(key);
+  console.log(`${ok ? "OK  " : "WARN"} ${key}`);
+}
+
 if (requiredMissing > 0) {
   console.error("\nFail: fill all required variables before production launch.");
   process.exit(1);

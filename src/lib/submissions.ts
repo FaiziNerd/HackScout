@@ -20,7 +20,7 @@ export interface CommunityEventInput {
   formFields?: unknown;
   organizerName: string;
   prizePool?: string;
-  source: "community" | "linkedin";
+  source: "community" | "linkedin" | "instagram";
   sourcePostUrl?: string;
 }
 

@@ -15,6 +15,7 @@ import { saveOrMergeScrapedEvent } from "./dedup";
 import { normalizeScrapedEvent } from "./normalizer";
 import type { EventSource, ScrapeStatus } from "@/generated/prisma/client";
 import type { ScraperResult } from "./types";
+import { notifyScraperFailures, scraperConfigWarnings } from "@/lib/scraper-alerts";
 
 const SCRAPERS: ReadonlyArray<{
   source: EventSource;
@@ -155,6 +156,19 @@ export async function runAllAndPersist(): Promise<SourceRunSummary[]> {
       errors,
       stats: result.stats,
     });
+  }
+
+  try {
+    const alert = await notifyScraperFailures(summaries);
+    if (alert.sent) {
+      console.log(`[scrapers] admin alert sent for failed/partial sources`);
+    }
+  } catch (error) {
+    console.error("[scrapers] alert email failed:", error);
+  }
+
+  for (const warning of scraperConfigWarnings()) {
+    console.warn(`[scrapers] config: ${warning}`);
   }
 
   return summaries;

@@ -3,10 +3,10 @@ import { z } from "zod";
 
 import { extractSocialPostDraft } from "@/lib/extract-social-post";
 import {
-  extractLinkedInEventDraft,
-  fetchPublicLinkedInText,
-  isLinkedInUrl,
-} from "@/lib/linkedin-capture";
+  extractInstagramEventDraft,
+  fetchPublicInstagramText,
+  isInstagramUrl,
+} from "@/lib/instagram-capture";
 
 const extractSchema = z
   .object({
@@ -14,15 +14,15 @@ const extractSchema = z
     postText: z.string().trim().optional(),
   })
   .refine((data) => Boolean(data.postUrl || data.postText), {
-    message: "Paste a LinkedIn URL or the post text.",
+    message: "Paste an Instagram URL or the caption text.",
   });
 
 function errorMessage(err: unknown) {
   if (err instanceof z.ZodError) {
-    return err.issues[0]?.message || "Check the LinkedIn capture and try again.";
+    return err.issues[0]?.message || "Check the Instagram capture and try again.";
   }
   if (err instanceof Error) return err.message;
-  return "LinkedIn capture failed.";
+  return "Instagram capture failed.";
 }
 
 export async function POST(request: Request) {
@@ -32,23 +32,23 @@ export async function POST(request: Request) {
     let warning = "";
 
     if (body.postUrl) {
-      if (!isLinkedInUrl(body.postUrl)) {
-        throw new Error("Use a LinkedIn post URL, or paste the post text instead.");
+      if (!isInstagramUrl(body.postUrl)) {
+        throw new Error("Use an Instagram post URL, or paste the caption text instead.");
       }
 
       try {
-        const fetched = await fetchPublicLinkedInText(body.postUrl);
+        const fetched = await fetchPublicInstagramText(body.postUrl);
         text = [text, fetched.text].filter(Boolean).join("\n\n");
       } catch (err) {
-        warning = err instanceof Error ? err.message : "Public LinkedIn fetch failed.";
-        if (!text) throw new Error(`${warning} Paste the post text to continue.`);
+        warning = err instanceof Error ? err.message : "Public Instagram fetch failed.";
+        if (!text) throw new Error(`${warning} Paste the caption text to continue.`);
       }
     }
 
     const { draft, usedAi } = await extractSocialPostDraft({
       text,
       sourcePostUrl: body.postUrl || undefined,
-      heuristic: extractLinkedInEventDraft,
+      heuristic: extractInstagramEventDraft,
     });
 
     return NextResponse.json({

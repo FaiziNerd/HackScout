@@ -124,28 +124,28 @@ todos:
     status: completed
   - id: deploy
     content: Deploy + SEO/OG + seed launch events
-    status: pending
+    status: completed
   - id: deploy-vercel
     content: Deploy Next.js app to Vercel production
-    status: pending
+    status: completed
   - id: deploy-worker
     content: Run BullMQ worker on Render or Railway
-    status: pending
+    status: completed
   - id: deploy-env-prod
     content: Configure production env vars (DB, Supabase, Redis, Resend, site URL, cron secret)
-    status: pending
+    status: completed
   - id: deploy-auth-prod
     content: Add production Supabase auth callback URL (/auth/callback)
-    status: pending
+    status: completed
   - id: deploy-db-prod
     content: Run prisma migrate deploy and production db seed
-    status: pending
+    status: completed
   - id: deploy-cron-queue-verify
     content: Verify cron routes enqueue and worker executes jobs
-    status: pending
+    status: completed
   - id: deploy-launch-qa
     content: Launch QA (sitemap, robots, city SEO title, OG share preview, mobile smoke)
-    status: pending
+    status: completed
 isProject: false
 ---
 

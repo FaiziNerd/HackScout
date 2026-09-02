@@ -29,7 +29,7 @@ const submitSchema = z
     formFields: z.unknown().optional(),
     organizerName: z.string().trim().min(2, "Organizer name is required."),
     prizePool: z.string().trim().optional(),
-    source: z.enum(["community", "linkedin"]).default("community"),
+    source: z.enum(["community", "linkedin", "instagram"]).default("community"),
     sourcePostUrl: z.union([z.string().url("Enter a valid source post URL."), z.literal("")]).optional(),
   })
   .superRefine((data, ctx) => {

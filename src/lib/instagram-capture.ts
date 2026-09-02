@@ -4,7 +4,10 @@ import type { EventCategory } from "@/generated/prisma/client";
 import { normalizeCity, PAKISTAN_CITIES } from "@/lib/cities";
 import type { SocialPostEventDraft } from "@/lib/social-post-capture";
 
-export type LinkedInEventDraft = SocialPostEventDraft;
+export type InstagramEventDraft = SocialPostEventDraft;
+
+const INSTAGRAM_HOST_RE = /(^|\.)instagram\.com$/i;
+const URL_RE = /https?:\/\/[^\s<>"')]+/gi;
 
 const CATEGORY_KEYWORDS: { category: EventCategory; keywords: string[] }[] = [
   { category: "hackathon", keywords: ["hackathon", "hackfest", "codefest", "coding competition"] },
@@ -44,20 +47,17 @@ const MONTHS: Record<string, string> = {
   december: "12",
 };
 
-const LINKEDIN_HOST_RE = /(^|\.)linkedin\.com$/i;
-const URL_RE = /https?:\/\/[^\s<>"')]+/gi;
-
-export function isLinkedInUrl(value: string) {
+export function isInstagramUrl(value: string) {
   try {
-    return LINKEDIN_HOST_RE.test(new URL(value).hostname);
+    return INSTAGRAM_HOST_RE.test(new URL(value).hostname);
   } catch {
     return false;
   }
 }
 
-export async function fetchPublicLinkedInText(url: string): Promise<{ text: string; image?: string }> {
-  if (!isLinkedInUrl(url)) {
-    throw new Error("Paste a valid LinkedIn URL.");
+export async function fetchPublicInstagramText(url: string): Promise<{ text: string; image?: string }> {
+  if (!isInstagramUrl(url)) {
+    throw new Error("Paste a valid Instagram post URL.");
   }
 
   const response = await fetch(url, {
@@ -70,7 +70,7 @@ export async function fetchPublicLinkedInText(url: string): Promise<{ text: stri
   });
 
   if (!response.ok) {
-    throw new Error("LinkedIn did not expose this post publicly. Paste the post text instead.");
+    throw new Error("Instagram did not expose this post publicly. Paste the caption text instead.");
   }
 
   const html = await response.text();
@@ -84,14 +84,17 @@ export async function fetchPublicLinkedInText(url: string): Promise<{ text: stri
   const bodyText = $("main").text() || $("body").text();
   const text = cleanText([title, description, bodyText].filter(Boolean).join("\n"));
 
-  if (!text || /sign in|join linkedin|authwall/i.test(text)) {
-    throw new Error("This LinkedIn post is behind a login wall. Paste the post text instead.");
+  if (!text || /log in|sign up|login/i.test(text) && text.length < 120) {
+    throw new Error("This Instagram post is behind a login wall. Paste the caption text instead.");
   }
 
   return { text, image };
 }
 
-export function extractLinkedInEventDraft(input: { text: string; sourcePostUrl?: string }): LinkedInEventDraft {
+export function extractInstagramEventDraft(input: {
+  text: string;
+  sourcePostUrl?: string;
+}): InstagramEventDraft {
   const cleaned = cleanText(input.text);
   const lines = cleaned
     .split(/\n+/)
@@ -99,10 +102,14 @@ export function extractLinkedInEventDraft(input: { text: string; sourcePostUrl?:
     .filter(Boolean);
   const searchable = cleaned.toLowerCase();
   const urls = extractUrls(cleaned);
-  const sourcePostUrl = input.sourcePostUrl?.trim() || urls.find(isLinkedInUrl) || "";
+  const sourcePostUrl = input.sourcePostUrl?.trim() || urls.find(isInstagramUrl) || "";
   const registrationUrl =
-    urls.find((url) => !isLinkedInUrl(url) && /form|register|lu\.ma|eventbrite|devfolio|devpost|unstop/i.test(url)) ||
-    urls.find((url) => !isLinkedInUrl(url)) ||
+    urls.find(
+      (url) =>
+        !isInstagramUrl(url) &&
+        /form|register|lu\.ma|eventbrite|devfolio|devpost|unstop|linktr\.ee/i.test(url),
+    ) ||
+    urls.find((url) => !isInstagramUrl(url)) ||
     "";
   const dateCandidates = extractDates(cleaned);
   const deadline = extractDeadline(cleaned, dateCandidates);
@@ -146,7 +153,10 @@ function extractUrls(text: string) {
 }
 
 function inferCategory(searchable: string): EventCategory {
-  return CATEGORY_KEYWORDS.find((item) => item.keywords.some((keyword) => searchable.includes(keyword)))?.category || "other";
+  return (
+    CATEGORY_KEYWORDS.find((item) => item.keywords.some((keyword) => searchable.includes(keyword)))
+      ?.category || "other"
+  );
 }
 
 function extractTitle(lines: string[]) {
@@ -191,7 +201,9 @@ function extractVenue(lines: string[]) {
     return venueLine.replace(/^(venue|location|where)\s*:?\s*/i, "").slice(0, 120).trim();
   }
 
-  const city = PAKISTAN_CITIES.find((item) => !item.isVirtual && lines.some((line) => line.toLowerCase().includes(item.name.toLowerCase())));
+  const city = PAKISTAN_CITIES.find(
+    (item) => !item.isVirtual && lines.some((line) => line.toLowerCase().includes(item.name.toLowerCase())),
+  );
   return city?.name || "";
 }
 
@@ -202,7 +214,7 @@ function extractPrizePool(lines: string[]) {
 
 function extractDeadline(text: string, dates: string[]) {
   const deadlineMatch = text.match(
-    /(?:deadline|last date|apply by|register by|registration closes|closes on)[^\n]{0,80}/i
+    /(?:deadline|last date|apply by|register by|registration closes|closes on)[^\n]{0,80}/i,
   )?.[0];
   if (!deadlineMatch) return "";
   return extractDates(deadlineMatch)[0] || dates[0] || "";
@@ -217,12 +229,18 @@ function extractDates(text: string) {
   }
 
   const monthNames = Object.keys(MONTHS).join("|");
-  const dayMonth = new RegExp(`\\b(0?[1-9]|[12]\\d|3[01])\\s+(${monthNames})\\s*,?\\s*(20\\d{2})?\\b`, "gi");
+  const dayMonth = new RegExp(
+    `\\b(0?[1-9]|[12]\\d|3[01])\\s+(${monthNames})\\s*,?\\s*(20\\d{2})?\\b`,
+    "gi",
+  );
   for (const match of text.matchAll(dayMonth)) {
     dates.add(toIsoDate(Number(match[3] || currentYear), Number(MONTHS[match[2].toLowerCase()]), Number(match[1])));
   }
 
-  const monthDay = new RegExp(`\\b(${monthNames})\\s+(0?[1-9]|[12]\\d|3[01])(?:st|nd|rd|th)?\\s*,?\\s*(20\\d{2})?\\b`, "gi");
+  const monthDay = new RegExp(
+    `\\b(${monthNames})\\s+(0?[1-9]|[12]\\d|3[01])(?:st|nd|rd|th)?\\s*,?\\s*(20\\d{2})?\\b`,
+    "gi",
+  );
   for (const match of text.matchAll(monthDay)) {
     dates.add(toIsoDate(Number(match[3] || currentYear), Number(MONTHS[match[1].toLowerCase()]), Number(match[2])));
   }
