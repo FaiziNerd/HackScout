@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Newsreader } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 
 import { JsonLd } from "@/components/json-ld";
 import { MissingEventReporter } from "@/components/missing-event-reporter";
@@ -80,6 +81,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <JsonLd data={websiteJsonLd()} />
         {children}
         <MissingEventReporter />
+        <Analytics />
       </body>
     </html>
   );
