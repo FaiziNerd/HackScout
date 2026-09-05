@@ -76,7 +76,9 @@ export function scraperConfigWarnings(): string[] {
   const warnings: string[] = [];
 
   if (!process.env.FACEBOOK_EVENT_URLS?.trim() && !process.env.FACEBOOK_PAGE_URLS?.trim()) {
-    warnings.push("FACEBOOK_EVENT_URLS and FACEBOOK_PAGE_URLS are empty — Facebook scraper will return no events.");
+    warnings.push(
+      "FACEBOOK_PAGE_URLS unset — using built-in university/GDG page defaults. Set FACEBOOK_PAGE_URLS to override.",
+    );
   }
 
   if (!process.env.LUMA_PAGE_URLS?.trim() && !process.env.LUMA_CALENDAR_SLUGS?.trim()) {

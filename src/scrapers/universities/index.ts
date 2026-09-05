@@ -2,7 +2,9 @@ import type { ScrapedEventInput, ScraperResult } from "../types";
 import { scrapeComsats } from "./comsats";
 import { scrapeFast } from "./fast";
 import { scrapeGiki } from "./giki";
+import { scrapeIba } from "./iba";
 import { scrapeLums } from "./lums";
+import { scrapeNed } from "./ned";
 import { scrapeNust } from "./nust";
 
 const UNIVERSITY_SCRAPERS = [
@@ -11,11 +13,13 @@ const UNIVERSITY_SCRAPERS = [
   scrapeFast,
   scrapeGiki,
   scrapeComsats,
+  scrapeIba,
+  scrapeNed,
 ] as const;
 
 /**
- * Runs NUST, LUMS, FAST, GIKI, and COMSATS calendar scrapers and merges them
- * into a single `university` source result.
+ * Runs NUST, LUMS, FAST, GIKI, COMSATS, IBA, and NED calendar scrapers and merges
+ * them into a single `university` source result.
  */
 export async function scrapeUniversity(): Promise<ScraperResult> {
   const results = await Promise.allSettled(UNIVERSITY_SCRAPERS.map((scraper) => scraper()));
@@ -46,4 +50,4 @@ export async function scrapeUniversity(): Promise<ScraperResult> {
   };
 }
 
-export { scrapeComsats, scrapeFast, scrapeGiki, scrapeLums, scrapeNust };
+export { scrapeComsats, scrapeFast, scrapeGiki, scrapeIba, scrapeLums, scrapeNed, scrapeNust };

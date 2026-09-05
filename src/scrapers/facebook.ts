@@ -7,6 +7,26 @@ const FACEBOOK_BASE_URL = "https://www.facebook.com";
 const MAX_PAGE_FETCHES = Number(process.env.FACEBOOK_PAGE_FETCH_LIMIT ?? 20);
 const MAX_EVENT_FETCHES = Number(process.env.FACEBOOK_EVENT_FETCH_LIMIT ?? 50);
 
+/** Starter public pages when FACEBOOK_PAGE_URLS is unset (universities + GDGs / GDSCs). */
+export const DEFAULT_FACEBOOK_PAGE_URLS = [
+  "https://www.facebook.com/nust.edu.pk",
+  "https://www.facebook.com/LUMS",
+  "https://www.facebook.com/fastnuces",
+  "https://www.facebook.com/giki.edu",
+  "https://www.facebook.com/COMSATS",
+  "https://www.facebook.com/NEDUETOfficial",
+  "https://www.facebook.com/IBAKarachi",
+  "https://www.facebook.com/gdgislamabad",
+  "https://www.facebook.com/gdglahore",
+  "https://www.facebook.com/gdgkarachi",
+  "https://www.facebook.com/gdgcloudislamabad",
+  "https://www.facebook.com/DSCNUST",
+  "https://www.facebook.com/gdscfast",
+  "https://www.facebook.com/gdsc.lums",
+  "https://www.facebook.com/gdscned",
+  "https://www.facebook.com/gdsc.iba",
+];
+
 const PAKISTAN_TERMS = [
   "pakistan",
   "pk",
@@ -103,9 +123,13 @@ function configuredEventUrls(): string[] {
 }
 
 function configuredPageUrls(): string[] {
-  const urls = splitEnvList(process.env.FACEBOOK_PAGE_URLS)
+  const fromEnv = splitEnvList(process.env.FACEBOOK_PAGE_URLS)
     .map(normalizeFacebookUrl)
     .filter((url): url is string => Boolean(url));
+
+  const urls = fromEnv.length > 0 ? fromEnv : DEFAULT_FACEBOOK_PAGE_URLS.map(normalizeFacebookUrl).filter(
+    (url): url is string => Boolean(url),
+  );
 
   return Array.from(new Set(urls));
 }

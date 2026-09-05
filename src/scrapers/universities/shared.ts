@@ -143,6 +143,49 @@ export function parseDateRangeFromText(text: string): { start: Date | null; end:
     };
   }
 
+  // Day-first ranges: "09 - 10 September, 2026" / "14-18 September, 2026"
+  const dayFirstSameMonth = value.match(
+    new RegExp(
+      `(\\d{1,2})(?:st|nd|rd|th)?\\s*[-–]\\s*(\\d{1,2})(?:st|nd|rd|th)?\\s+(${MONTH_PATTERN}),?\\s+(\\d{4})`,
+      "i",
+    ),
+  );
+  if (dayFirstSameMonth) {
+    const month = MONTH_INDEX[dayFirstSameMonth[3].toLowerCase()];
+    return {
+      start: karachiDate(Number(dayFirstSameMonth[4]), month, Number(dayFirstSameMonth[1])),
+      end: karachiDate(Number(dayFirstSameMonth[4]), month, Number(dayFirstSameMonth[2])),
+    };
+  }
+
+  // Day-first single: "08 October, 2026" / "26 September, 2026"
+  const dayFirstSingle = value.match(
+    new RegExp(`(\\d{1,2})(?:st|nd|rd|th)?\\s+(${MONTH_PATTERN}),?\\s+(\\d{4})`, "i"),
+  );
+  if (dayFirstSingle) {
+    const month = MONTH_INDEX[dayFirstSingle[2].toLowerCase()];
+    return {
+      start: karachiDate(Number(dayFirstSingle[3]), month, Number(dayFirstSingle[1])),
+      end: null,
+    };
+  }
+
+  // Cross-month day-first: "29 Sep to 02 Oct, 2026"
+  const dayFirstCrossMonth = value.match(
+    new RegExp(
+      `(\\d{1,2})(?:st|nd|rd|th)?\\s+(${MONTH_PATTERN})\\s+(?:to|[-–])\\s+(\\d{1,2})(?:st|nd|rd|th)?\\s+(${MONTH_PATTERN}),?\\s+(\\d{4})`,
+      "i",
+    ),
+  );
+  if (dayFirstCrossMonth) {
+    const startMonth = MONTH_INDEX[dayFirstCrossMonth[2].toLowerCase()];
+    const endMonth = MONTH_INDEX[dayFirstCrossMonth[4].toLowerCase()];
+    return {
+      start: karachiDate(Number(dayFirstCrossMonth[5]), startMonth, Number(dayFirstCrossMonth[1])),
+      end: karachiDate(Number(dayFirstCrossMonth[5]), endMonth, Number(dayFirstCrossMonth[3])),
+    };
+  }
+
   const twoMonthRange = value.match(
     new RegExp(
       `(${MONTH_PATTERN})\\s+(\\d{1,2})(?:st|nd|rd|th)?\\s*[-–]\\s*(${MONTH_PATTERN})\\s+(\\d{1,2})(?:st|nd|rd|th)?,?\\s+(\\d{4})`,
