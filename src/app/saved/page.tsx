@@ -3,11 +3,13 @@ import { redirect } from "next/navigation";
 import { BookmarkSimple } from "@phosphor-icons/react/dist/ssr";
 
 import { EventCard } from "@/components/event-card";
+import { ScoutBadge } from "@/components/scout-badge";
 import { SiteHeader } from "@/components/site-header";
 import { WeeklyDigestPreferences } from "@/components/weekly-digest-preferences";
 import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getSavedEvents } from "@/lib/saved-events";
+import { countScoutContributions } from "@/lib/scout";
 import { pageMetadata } from "@/lib/site";
 
 export const metadata = pageMetadata({
@@ -23,7 +25,7 @@ export default async function SavedEventsPage() {
     redirect("/login?next=/saved");
   }
 
-  const [events, cities, appUser] = await Promise.all([
+  const [events, cities, appUser, scoutCount] = await Promise.all([
     getSavedEvents(user.id),
     prisma.city.findMany({
       select: { id: true, slug: true, name: true, province: true, isVirtual: true },
@@ -33,11 +35,13 @@ export default async function SavedEventsPage() {
       where: { id: user.id },
       select: { preferredCityIds: true },
     }),
+    countScoutContributions(user.id),
   ]);
   const preferenceValues = appUser?.preferredCityIds ?? [];
   const initialDigestCityIds = cities
     .filter((city) => preferenceValues.includes(city.id) || preferenceValues.includes(city.slug))
     .map((city) => city.id);
+  const isScout = scoutCount >= 1;
 
   return (
     <div className="editorial-shell flex min-h-dvh flex-col bg-background text-foreground">
@@ -48,6 +52,7 @@ export default async function SavedEventsPage() {
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-y border-foreground py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em]">
             <span className="text-primary">Personal desk / Saved</span>
             <span>Newest pin first</span>
+            {isScout ? <ScoutBadge /> : null}
           </div>
           <h1 className="mt-7 max-w-[12ch] font-heading text-[clamp(3.4rem,8vw,7rem)] font-medium leading-[0.8] tracking-[-0.06em]">
             Held for later.
@@ -55,6 +60,9 @@ export default async function SavedEventsPage() {
           <p className="mt-4 max-w-[46ch] text-sm leading-relaxed text-muted-foreground">
             These listings stay on your desk until you unpin them. Deadlines still close on the
             organizer’s clock.
+            {isScout
+              ? ` You’ve filed ${scoutCount} approved event${scoutCount === 1 ? "" : "s"} — Scout status unlocked.`
+              : " Sign in when you submit events to earn the Scout badge after approval."}
           </p>
         </div>
       </header>
