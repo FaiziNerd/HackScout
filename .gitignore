@@ -12,6 +12,9 @@
 
 # testing
 /coverage
+/playwright-report
+/test-results
+/blob-report
 
 # next.js
 /.next/
@@ -19,10 +22,15 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
+Thumbs.db
+Desktop.ini
 *.pem
+*.log
+*.local
 
 # debug
 npm-debug.log*
@@ -37,11 +45,23 @@ yarn-error.log*
 # prisma generated client
 /src/generated/
 
-# vercel
+# vercel / local deploy
 .vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
-/src/generated/prisma
+# IDE / editor (local only)
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Cursor local state (keep project skills in .agents/)
+.cursor/
+
+# OS / temp
+tmp/
+temp/
+.cache/
