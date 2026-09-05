@@ -58,8 +58,10 @@ next-env.d.ts
 *.swp
 *.swo
 
-# Cursor local state (keep project skills in .agents/)
+# Cursor local state / agent skills (local only — not part of the app)
 .cursor/
+.agents/
+skills-lock.json
 
 # OS / temp
 tmp/
