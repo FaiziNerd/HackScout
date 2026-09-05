@@ -148,7 +148,7 @@ const faqs = [
   {
     question: "How does HackScout verify an event?",
     answer:
-      "We check the official organizer page, registration link, dates and location before a listing is marked verified.",
+      "Community submissions stay pending until the organizer confirms a one-time email link. Scraped listings are normalized from public sources before they appear.",
   },
   {
     question: "Is submitting an event free?",
@@ -543,8 +543,8 @@ export default async function LandingPage() {
                 Put your event on Pakistan&apos;s radar.
               </h2>
               <p className="mt-4 max-w-[55ch] text-sm leading-relaxed text-primary-foreground/80">
-                Send us the official link. We verify the listing and distribute it through city feeds,
-                alerts and the weekly campus digest.
+                Send the official link and organizer email. Confirm the message we send, then the
+                listing goes live on city feeds, alerts and the weekly campus digest.
               </p>
             </div>
             <div className="flex flex-col gap-3">

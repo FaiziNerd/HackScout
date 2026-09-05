@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { ArrowUpRight, LockKey, ShieldCheck } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, ShieldCheck } from "@phosphor-icons/react/dist/ssr";
 
+import { AdminLocked } from "@/components/admin-locked";
 import { ReviewQueueActions } from "@/components/review-queue-actions";
 import { SiteHeader } from "@/components/site-header";
 import { getAdminUser } from "@/lib/admin";
@@ -35,28 +36,7 @@ export default async function AdminPage({ searchParams }: PageProps) {
   const status = parseStatus(params.status);
 
   if (!admin) {
-    return (
-      <div className="editorial-shell flex min-h-dvh flex-col bg-background text-foreground">
-        <SiteHeader />
-        <main className="mx-auto w-full max-w-[720px] flex-1 px-4 pb-16 pt-[6.5rem] sm:px-6">
-          <div className="border-2 border-foreground bg-card p-8">
-            <p className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
-              <LockKey className="size-4" />
-              Restricted desk
-            </p>
-            <h1 className="mt-4 font-heading text-4xl font-semibold tracking-[-0.04em]">
-              Review queue is locked.
-            </h1>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Sign in with an address listed in <code>ADMIN_EMAILS</code>.
-            </p>
-            <Link href="/login?next=%2Fadmin" className="mt-6 inline-flex min-h-11 items-center underline">
-              Sign in
-            </Link>
-          </div>
-        </main>
-      </div>
-    );
+    return <AdminLocked title="Review queue is locked." nextPath="/admin" />;
   }
 
   const [{ events, tally }, cities] = await Promise.all([getReviewQueue(status), listReviewCities()]);

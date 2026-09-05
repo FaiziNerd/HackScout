@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, DownloadSimple, LockKey } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, DownloadSimple } from "@phosphor-icons/react/dist/ssr";
 
+import { AdminLocked } from "@/components/admin-locked";
 import { SiteHeader } from "@/components/site-header";
 import { getAdminUser } from "@/lib/admin";
 import { getEventRegistrations } from "@/lib/registrations";
@@ -27,20 +28,7 @@ export default async function EventRegistrationsPage({ params }: PageProps) {
   const admin = await getAdminUser();
 
   if (!admin) {
-    return (
-      <div className="editorial-shell flex min-h-dvh flex-col bg-background text-foreground">
-        <SiteHeader />
-        <main className="mx-auto w-full max-w-[720px] flex-1 px-4 pb-16 pt-[6.5rem]">
-          <div className="border-2 border-foreground p-8">
-            <LockKey className="size-6" />
-            <h1 className="mt-4 font-heading text-3xl">Locked</h1>
-            <Link href="/login" className="mt-4 inline-block underline">
-              Sign in
-            </Link>
-          </div>
-        </main>
-      </div>
-    );
+    return <AdminLocked title="Locked." nextPath={`/admin/registrations/${slug}`} />;
   }
 
   const data = await getEventRegistrations(slug);

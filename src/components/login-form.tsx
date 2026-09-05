@@ -11,7 +11,8 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const ERROR_COPY: Record<string, string> = {
   missing_code: "That sign-in link is missing a code. Request a new one.",
-  auth_callback: "Sign-in could not be completed. Try again.",
+  auth_callback:
+    "Sign-in link could not be completed. Open the newest email link in the same browser, or use Continue with Google.",
   config: "Auth is not configured on this environment.",
 };
 
