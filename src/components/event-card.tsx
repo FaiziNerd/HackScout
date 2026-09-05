@@ -4,6 +4,7 @@ import { ArrowUpRight, CalendarBlank, Star } from "@phosphor-icons/react/dist/ss
 import { CategoryBadge } from "@/components/category-badge";
 import { CityBadge } from "@/components/city-badge";
 import { DeadlineBadge } from "@/components/deadline-badge";
+import { LinkedInSourceBadge } from "@/components/linkedin-source-badge";
 import { SaveEventButton } from "@/components/save-event-button";
 import type { City, Event } from "@/generated/prisma/client";
 import { formatEventDateRange, SOURCE_LABELS } from "@/lib/events";
@@ -41,6 +42,7 @@ export function EventCard({ event, index = 1, saved = false, signedIn = false }:
           <div className="flex flex-wrap items-center gap-2">
             <CategoryBadge category={event.category} />
             <CityBadge cityName={event.city.name} />
+            <LinkedInSourceBadge source={event.source} sources={event.sources} />
           </div>
 
           <h2 className="mt-4 font-heading text-3xl font-semibold leading-[0.98] tracking-[-0.035em] transition-transform duration-200 group-hover:translate-x-1">
