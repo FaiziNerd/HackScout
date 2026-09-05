@@ -73,6 +73,8 @@ model City {
   country    String  @default("Pakistan")
   eventCount Int     @default(0)
   isVirtual  Boolean @default(false)
+  lat        Float?
+  lng        Float?
   events     Event[]
 }
 
@@ -86,6 +88,7 @@ model User {
   registrations     Registration[]
   deadlineReminders DeadlineReminder[]
   weeklyDigests     WeeklyDigest[]
+  submittedEvents   Event[]            @relation("EventSubmitter")
 }
 
 model SavedEvent {
@@ -146,12 +149,15 @@ model Event {
   tags                 String[]           @default([])
   prizePool            String?
   organizerName        String?
+  organizerEmail       String?
   registrationType     RegistrationType   @default(external)
   registrationUrl      String?
   formFields           Json?
   registrationClicks   Int                @default(0)
   status               EventStatus        @default(upcoming)
   reviewStatus         ReviewStatus       @default(approved)
+  submittedByUserId    String?
+  submittedBy          User?              @relation("EventSubmitter", fields: [submittedByUserId], references: [id], onDelete: SetNull)
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
   lastScrapedAt        DateTime?
@@ -163,6 +169,7 @@ model Event {
   @@index([registrationDeadline])
   @@index([status])
   @@index([reviewStatus])
+  @@index([submittedByUserId])
 }
 
 model DeadlineReminder {
