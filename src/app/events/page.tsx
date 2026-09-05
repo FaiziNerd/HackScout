@@ -4,6 +4,7 @@ import { ArrowUpRight, Globe, MagnifyingGlass, MapPin } from "@phosphor-icons/re
 
 import { EventCard } from "@/components/event-card";
 import { MissingEventCta } from "@/components/missing-event-cta";
+import { NearYouButton } from "@/components/near-you-button";
 import { SiteHeader } from "@/components/site-header";
 import { Input } from "@/components/ui/input";
 import { getAuthUser } from "@/lib/auth";
@@ -115,6 +116,7 @@ export default async function EventsFeedPage({ searchParams }: PageProps) {
               City desk
             </p>
             <div className="flex flex-wrap items-center gap-2 py-3 lg:px-4">
+              <NearYouButton category={category} search={search} />
               {CITY_FILTERS.map((item) => (
                 <Link
                   key={item.slug}
