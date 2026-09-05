@@ -105,6 +105,7 @@ export function SocialPostCaptureForm({
     const payload = {
       title: String(formData.get("title") || ""),
       organizerName: String(formData.get("organizerName") || ""),
+      organizerEmail: String(formData.get("organizerEmail") || ""),
       category: String(formData.get("category") || "other"),
       citySlug: String(formData.get("citySlug") || selectedCity?.slug || "karachi"),
       venue: String(formData.get("venue") || "") || undefined,
@@ -252,21 +253,35 @@ export function SocialPostCaptureForm({
               />
             </div>
             <div>
-              <label htmlFor="category" className={labelClass}>
-                Format <span className="text-primary">*</span>
+              <label htmlFor="organizerEmail" className={labelClass}>
+                Organizer email <span className="text-primary">*</span>
               </label>
-              <select id="category" name="category" required defaultValue={draft.category} className={selectClass}>
-                <option value="hackathon">Hackathon</option>
-                <option value="conference">Conference</option>
-                <option value="workshop">Workshop</option>
-                <option value="meetup">Meetup</option>
-                <option value="competition">Competition / Olympiad</option>
-                <option value="seminar">Seminar / Webinar</option>
-                <option value="career_fair">Career fair</option>
-                <option value="festival">Festival</option>
-                <option value="other">Other</option>
-              </select>
+              <Input
+                id="organizerEmail"
+                name="organizerEmail"
+                type="email"
+                required
+                placeholder="organizer@university.edu.pk"
+                className={fieldClass}
+              />
             </div>
+          </div>
+
+          <div>
+            <label htmlFor="category" className={labelClass}>
+              Format <span className="text-primary">*</span>
+            </label>
+            <select id="category" name="category" required defaultValue={draft.category} className={selectClass}>
+              <option value="hackathon">Hackathon</option>
+              <option value="conference">Conference</option>
+              <option value="workshop">Workshop</option>
+              <option value="meetup">Meetup</option>
+              <option value="competition">Competition / Olympiad</option>
+              <option value="seminar">Seminar / Webinar</option>
+              <option value="career_fair">Career fair</option>
+              <option value="festival">Festival</option>
+              <option value="other">Other</option>
+            </select>
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">

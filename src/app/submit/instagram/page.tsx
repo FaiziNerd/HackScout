@@ -11,7 +11,7 @@ import { pageMetadata } from "@/lib/site";
 export const metadata = pageMetadata({
   title: "Capture Instagram Event",
   description:
-    "Turn a public Instagram event announcement into a structured HackScout listing for review.",
+    "Turn a public Instagram event announcement into a HackScout listing — confirm by email to publish.",
   path: "/submit/instagram",
 });
 
@@ -53,7 +53,7 @@ export default async function InstagramSubmitPage() {
             </div>
             <p className="border-l-4 border-primary pl-4 text-sm font-medium leading-relaxed">
               Paste an Instagram URL or copied caption. HackScout extracts a draft with AI, then you
-              verify it before it reaches the admin review queue.
+              verify it and confirm the organizer email to publish.
             </p>
           </div>
         </div>

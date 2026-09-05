@@ -12,7 +12,7 @@ const INSTAGRAM_CONFIG = {
   sourcePostUrlLabel: "Original Instagram post",
   sourcePostUrlPlaceholder: "https://www.instagram.com/p/...",
   submitLabel: "File Instagram event",
-  reviewNote: "Saved as Instagram source and held for admin review before publishing.",
+  reviewNote: "Saved as Instagram source. Confirm the organizer email we send to publish.",
 };
 
 export function InstagramCaptureForm({ cities }: { cities: SubmitCityOption[] }) {

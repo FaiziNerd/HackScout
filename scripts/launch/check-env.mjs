@@ -12,26 +12,30 @@ const required = [
   "REDIS_URL",
 ];
 
+/** Needed for organizer publish-confirm emails after /submit */
+const publishConfirm = ["RESEND_API_KEY", "DEADLINE_EMAIL_FROM"];
+
 const recommended = [
   "SUPABASE_SERVICE_ROLE_KEY",
-  "RESEND_API_KEY",
-  "DEADLINE_EMAIL_FROM",
   "ADMIN_EMAILS",
   "GROQ_API_KEY",
+  // Optional; createPublishToken falls back to CRON_SECRET when empty
+  "PUBLISH_TOKEN_SECRET",
 ];
 
 function isFilled(key) {
   return Boolean(process.env[key] && process.env[key].trim().length > 0);
 }
 
-function printBlock(title, keys) {
+function printBlock(title, keys, { optionalEmptyOk = false } = {}) {
   console.log(`\n${title}`);
   let missing = 0;
 
   for (const key of keys) {
     const ok = isFilled(key);
-    if (!ok) missing += 1;
-    console.log(`${ok ? "OK  " : "MISS"} ${key}`);
+    if (!ok && !optionalEmptyOk) missing += 1;
+    const label = ok ? "OK  " : optionalEmptyOk ? "SKIP" : "MISS";
+    console.log(`${label} ${key}`);
   }
 
   return missing;
@@ -39,11 +43,20 @@ function printBlock(title, keys) {
 
 console.log("HackScout production env check");
 const requiredMissing = printBlock("Required", required);
-const recommendedMissing = printBlock("Recommended", recommended);
+const publishMissing = printBlock("Publish confirm (organizer email → live)", publishConfirm);
+const recommendedMissing = printBlock("Recommended", recommended, {
+  optionalEmptyOk: true,
+});
+
+const publishSigningOk = isFilled("PUBLISH_TOKEN_SECRET") || isFilled("CRON_SECRET");
+console.log(`\nPublish link signing: ${publishSigningOk ? "OK  " : "MISS"} PUBLISH_TOKEN_SECRET or CRON_SECRET`);
 
 console.log("\nSummary");
 console.log(`Required missing: ${requiredMissing}`);
-console.log(`Recommended missing: ${recommendedMissing}`);
+console.log(`Publish confirm missing: ${publishMissing}`);
+console.log(
+  `Recommended empty (ok): ${recommended.filter((key) => !isFilled(key)).length}`,
+);
 
 const scraperOptional = [
   "FACEBOOK_EVENT_URLS",
@@ -58,8 +71,8 @@ for (const key of scraperOptional) {
   console.log(`${ok ? "OK  " : "WARN"} ${key}`);
 }
 
-if (requiredMissing > 0) {
-  console.error("\nFail: fill all required variables before production launch.");
+if (requiredMissing > 0 || publishMissing > 0 || !publishSigningOk) {
+  console.error("\nFail: fill required + publish-confirm variables before production launch.");
   process.exit(1);
 }
 

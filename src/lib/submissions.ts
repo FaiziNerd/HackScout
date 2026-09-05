@@ -19,9 +19,11 @@ export interface CommunityEventInput {
   registrationType?: "external" | "native";
   formFields?: unknown;
   organizerName: string;
+  organizerEmail: string;
   prizePool?: string;
   source: "community" | "linkedin" | "instagram";
   sourcePostUrl?: string;
+  submittedByUserId?: string;
 }
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -124,10 +126,12 @@ export async function createPendingCommunityEvent(input: CommunityEventInput) {
       isOnline: normalized.isOnline,
       tags: normalized.tags,
       organizerName: normalized.organizerName,
+      organizerEmail: input.organizerEmail.trim().toLowerCase(),
       prizePool: normalized.prizePool,
       registrationType: normalized.registrationType,
       registrationUrl: registrationType === "native" ? null : normalized.registrationUrl,
       formFields: registrationType === "native" ? parseFormFields(input.formFields) : undefined,
+      submittedByUserId: input.submittedByUserId || null,
       status: "upcoming",
       reviewStatus: "pending",
     },

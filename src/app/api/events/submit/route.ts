@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { getAuthUser, ensureAppUser } from "@/lib/auth";
+import { sendPublishConfirmationEmail } from "@/lib/organizer-notify";
 import { createPendingCommunityEvent } from "@/lib/submissions";
 
 const submitSchema = z
@@ -28,6 +30,7 @@ const submitSchema = z
     registrationUrl: z.union([z.string().url("Enter a valid registration URL."), z.literal("")]).optional(),
     formFields: z.unknown().optional(),
     organizerName: z.string().trim().min(2, "Organizer name is required."),
+    organizerEmail: z.string().trim().email("Organizer email is required to publish."),
     prizePool: z.string().trim().optional(),
     source: z.enum(["community", "linkedin", "instagram"]).default("community"),
     sourcePostUrl: z.union([z.string().url("Enter a valid source post URL."), z.literal("")]).optional(),
@@ -61,6 +64,9 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const data = submitSchema.parse(body);
+    const organizerEmail = data.organizerEmail.trim().toLowerCase();
+    const authUser = await getAuthUser();
+    const submitter = authUser ? await ensureAppUser(authUser) : null;
 
     const event = await createPendingCommunityEvent({
       ...data,
@@ -69,16 +75,40 @@ export async function POST(request: Request) {
       prizePool: data.prizePool || undefined,
       customCityName: data.customCityName || undefined,
       registrationUrl: data.registrationUrl || undefined,
+      organizerEmail,
       source: data.source,
       sourcePostUrl: data.sourcePostUrl || undefined,
       isOnline: data.citySlug === "online",
+      submittedByUserId: submitter?.id,
     });
+
+    let emailSent = false;
+    let confirmUrl: string | undefined;
+    try {
+      const mail = await sendPublishConfirmationEmail({
+        organizerEmail,
+        eventTitle: event.title,
+        eventId: event.id,
+      });
+      emailSent = mail.sent;
+      confirmUrl = mail.confirmUrl;
+    } catch (mailError) {
+      console.error("[events/submit] publish confirmation email failed", mailError);
+    }
+
+    const message = emailSent
+      ? `Check ${organizerEmail} and click Publish to go live. The link expires in 48 hours.`
+      : process.env.NODE_ENV !== "production" && confirmUrl
+        ? `Email not configured locally. Open this publish link: ${confirmUrl}`
+        : `Listing saved. We could not email ${organizerEmail} — check RESEND_API_KEY / DEADLINE_EMAIL_FROM on the server.`;
 
     return NextResponse.json({
       ok: true,
       eventId: event.id,
       slug: event.slug,
-      message: "Event filed for review. It will appear on HackScout after the desk verifies it.",
+      emailSent,
+      ...(process.env.NODE_ENV !== "production" && confirmUrl ? { confirmUrl } : {}),
+      message,
     });
   } catch (err) {
     return NextResponse.json({ ok: false, error: errorMessage(err) }, { status: 400 });

@@ -52,6 +52,7 @@ export function SubmitEventForm({ cities }: { cities: SubmitCityOption[] }) {
     const payload = {
       title: String(formData.get("title") || ""),
       organizerName: String(formData.get("organizerName") || ""),
+      organizerEmail: String(formData.get("organizerEmail") || ""),
       category: String(formData.get("category") || "hackathon"),
       citySlug,
       customCityName: String(formData.get("customCityName") || "") || undefined,
@@ -138,21 +139,37 @@ export function SubmitEventForm({ cities }: { cities: SubmitCityOption[] }) {
               />
             </div>
             <div>
-              <label htmlFor="category" className={labelClass}>
-                03 / Format <span className="text-primary">*</span>
+              <label htmlFor="organizerEmail" className={labelClass}>
+                Organizer email <span className="text-primary">*</span>
               </label>
-              <select id="category" name="category" required className={selectClass}>
-                <option value="hackathon">Hackathon</option>
-                <option value="conference">Conference</option>
-                <option value="workshop">Workshop</option>
-                <option value="meetup">Meetup</option>
-                <option value="competition">Competition / Olympiad</option>
-                <option value="seminar">Seminar / Webinar</option>
-                <option value="career_fair">Career fair</option>
-                <option value="festival">Festival</option>
-                <option value="other">Other</option>
-              </select>
+              <p className="mt-1 mb-2 text-xs text-muted-foreground">
+                We email a publish link here. Same inbox gets signup alerts for hosted forms.
+              </p>
+              <Input
+                id="organizerEmail"
+                name="organizerEmail"
+                type="email"
+                required
+                placeholder="organizer@university.edu.pk"
+                className={fieldClass}
+              />
             </div>
+          </div>
+          <div>
+            <label htmlFor="category" className={labelClass}>
+              03 / Format <span className="text-primary">*</span>
+            </label>
+            <select id="category" name="category" required className={selectClass}>
+              <option value="hackathon">Hackathon</option>
+              <option value="conference">Conference</option>
+              <option value="workshop">Workshop</option>
+              <option value="meetup">Meetup</option>
+              <option value="competition">Competition / Olympiad</option>
+              <option value="seminar">Seminar / Webinar</option>
+              <option value="career_fair">Career fair</option>
+              <option value="festival">Festival</option>
+              <option value="other">Other</option>
+            </select>
           </div>
         </fieldset>
 
@@ -333,12 +350,15 @@ export function SubmitEventForm({ cities }: { cities: SubmitCityOption[] }) {
               />
             </div>
           ) : (
-            <div>
-              <p className={labelClass}>Signup questions</p>
-              <p className="mt-1 mb-3 text-xs text-muted-foreground">
-                Name and email stay required. Add university, team, GitHub or your own prompts.
-              </p>
-              <FormFieldBuilder fields={formFields} onChange={setFormFields} />
+            <div className="grid gap-5">
+              <div>
+                <p className={labelClass}>Signup questions</p>
+                <p className="mt-1 mb-3 text-xs text-muted-foreground">
+                  Name and email stay required. Add university, team, GitHub or your own prompts.
+                  New signups notify the organizer email above — sign in with that inbox to download CSV.
+                </p>
+                <FormFieldBuilder fields={formFields} onChange={setFormFields} />
+              </div>
             </div>
           )}
           <div>
@@ -392,7 +412,7 @@ export function SubmitEventForm({ cities }: { cities: SubmitCityOption[] }) {
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
               <CheckCircle className="size-5 shrink-0 text-primary" weight="bold" />
-              <span>Reviewed within 24 hours and published after verification.</span>
+              <span>We email a publish link — click it to go live (no admin wait).</span>
             </div>
             <Button
               type="submit"
@@ -430,7 +450,7 @@ export function SubmitPageHero() {
           </div>
           <p className="border-l-4 border-primary pl-4 text-sm font-medium leading-relaxed">
             Submit a hackathon, meetup, conference or campus competition from anywhere in Pakistan.
-            Listing is free and every link is checked before it goes live.
+            Listing is free — confirm the email we send and it goes live.
           </p>
         </div>
       </div>

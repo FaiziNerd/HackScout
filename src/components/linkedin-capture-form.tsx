@@ -12,7 +12,7 @@ const LINKEDIN_CONFIG = {
   sourcePostUrlLabel: "Original LinkedIn post",
   sourcePostUrlPlaceholder: "https://www.linkedin.com/posts/...",
   submitLabel: "File LinkedIn event",
-  reviewNote: "Saved as LinkedIn source and held for admin review before publishing.",
+  reviewNote: "Saved as LinkedIn source. Confirm the organizer email we send to publish.",
 };
 
 export function LinkedInCaptureForm({ cities }: { cities: SubmitCityOption[] }) {

@@ -11,7 +11,7 @@ import { pageMetadata } from "@/lib/site";
 export const metadata = pageMetadata({
   title: "Capture LinkedIn Event",
   description:
-    "Turn a public LinkedIn event announcement into a structured HackScout listing for review.",
+    "Turn a public LinkedIn event announcement into a HackScout listing — confirm by email to publish.",
   path: "/submit/linkedin",
 });
 
@@ -53,7 +53,7 @@ export default async function LinkedInSubmitPage() {
             </div>
             <p className="border-l-4 border-primary pl-4 text-sm font-medium leading-relaxed">
               Paste a LinkedIn URL or copied text. HackScout extracts a draft with AI, then you verify it
-              before it reaches the admin review queue.
+              and confirm the organizer email to publish.
             </p>
           </div>
         </div>

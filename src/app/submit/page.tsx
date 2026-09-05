@@ -36,7 +36,7 @@ export default async function SubmitPage() {
             {[
               ["01", "Use the official event and registration links."],
               ["02", "Include the final registration deadline."],
-              ["03", "The desk verifies each submission before publishing."],
+              ["03", "Confirm the email we send — that publishes the listing."],
             ].map(([number, text]) => (
               <li key={number} className="grid grid-cols-[2rem_1fr] gap-2 text-xs leading-relaxed">
                 <span className="font-mono text-[10px] text-muted-foreground">{number}</span>

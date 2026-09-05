@@ -1,5 +1,6 @@
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
+import { notifyOrganizerOfRegistration } from "@/lib/organizer-notify";
 import {
   parseFormFields,
   registrationsToCsv,
@@ -24,10 +25,13 @@ export async function submitNativeRegistration(
     where: { slug, reviewStatus: "approved" },
     select: {
       id: true,
+      slug: true,
+      title: true,
       status: true,
       registrationType: true,
       registrationDeadline: true,
       formFields: true,
+      organizerEmail: true,
     },
   });
 
@@ -45,8 +49,9 @@ export async function submitNativeRegistration(
     email: typeof body.email === "string" && body.email.trim() ? body.email : user.email,
   });
 
+  let registration;
   try {
-    return await prisma.registration.create({
+    registration = await prisma.registration.create({
       data: {
         eventId: event.id,
         userId: user.id,
@@ -60,6 +65,28 @@ export async function submitNativeRegistration(
     }
     throw error;
   }
+
+  if (event.organizerEmail) {
+    const registrantName =
+      typeof payload.name === "string"
+        ? payload.name
+        : typeof payload.fullName === "string"
+          ? payload.fullName
+          : undefined;
+    try {
+      await notifyOrganizerOfRegistration({
+        organizerEmail: event.organizerEmail,
+        eventTitle: event.title,
+        eventSlug: event.slug,
+        registrantEmail: email,
+        registrantName,
+      });
+    } catch {
+      // Never block the registrant if email delivery fails.
+    }
+  }
+
+  return registration;
 }
 
 export async function getNativeEventsWithCounts() {
@@ -101,4 +128,9 @@ export function buildRegistrationsCsv(fields: RegistrationFormField[], rows: Awa
   NonNullable<Awaited<ReturnType<typeof getEventRegistrations>>>
 >["rows"]) {
   return registrationsToCsv(fields, rows);
+}
+
+export function isOrganizerEmail(organizerEmail: string | null | undefined, userEmail: string) {
+  if (!organizerEmail) return false;
+  return organizerEmail.trim().toLowerCase() === userEmail.trim().toLowerCase();
 }

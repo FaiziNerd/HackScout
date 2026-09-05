@@ -17,6 +17,7 @@ import { CountdownTimer } from "@/components/countdown-timer";
 import { DeadlineBadge } from "@/components/deadline-badge";
 import { EventCard } from "@/components/event-card";
 import { JsonLd } from "@/components/json-ld";
+import { LinkedInSourceBadge } from "@/components/linkedin-source-badge";
 import { MissingEventCta } from "@/components/missing-event-cta";
 import { RegistrationCta } from "@/components/registration-cta";
 import { SaveEventButton } from "@/components/save-event-button";
@@ -131,6 +132,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               <Link href={`/cities/${event.city.slug}`} className="hover:opacity-80">
                 <CityBadge cityName={event.city.name} />
               </Link>
+              <LinkedInSourceBadge source={event.source} sources={event.sources} />
               <DeadlineBadge deadline={event.registrationDeadline} />
             </div>
 
@@ -234,6 +236,18 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
               signedIn={Boolean(user)}
               variant="detail"
             />
+
+            {user &&
+            event.registrationType === "native" &&
+            event.organizerEmail &&
+            event.organizerEmail.toLowerCase() === user.email.toLowerCase() ? (
+              <a
+                href={`/api/events/${event.slug}/registrations?format=csv`}
+                className="mt-4 flex min-h-11 items-center justify-center border-2 border-foreground bg-card text-[10px] font-semibold uppercase tracking-[0.12em] hover:bg-foreground hover:text-background"
+              >
+                Download signup CSV
+              </a>
+            ) : null}
 
             <div className="mt-6 border-2 border-foreground bg-card p-4">
               <p className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em]">

@@ -1,22 +1,26 @@
 import { NextResponse } from "next/server";
 
 import { getAdminUser } from "@/lib/admin";
-import { buildRegistrationsCsv, getEventRegistrations } from "@/lib/registrations";
+import { getAuthUser } from "@/lib/auth";
+import { buildRegistrationsCsv, getEventRegistrations, isOrganizerEmail } from "@/lib/registrations";
 
 interface RouteProps {
   params: Promise<{ slug: string }>;
 }
 
 export async function GET(request: Request, { params }: RouteProps) {
-  const admin = await getAdminUser();
-  if (!admin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
   const { slug } = await params;
   const data = await getEventRegistrations(slug);
   if (!data) {
     return NextResponse.json({ error: "Event not found." }, { status: 404 });
+  }
+
+  const admin = await getAdminUser();
+  const user = admin ? null : await getAuthUser();
+  const isOrganizer = Boolean(user && isOrganizerEmail(data.event.organizerEmail, user.email));
+
+  if (!admin && !isOrganizer) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const format = new URL(request.url).searchParams.get("format");
