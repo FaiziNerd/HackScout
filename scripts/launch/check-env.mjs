@@ -9,7 +9,6 @@ const required = [
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
   "NEXT_PUBLIC_SITE_URL",
   "CRON_SECRET",
-  "REDIS_URL",
 ];
 
 /** Needed for organizer publish-confirm emails after /submit */
@@ -44,7 +43,7 @@ function printBlock(title, keys, { optionalEmptyOk = false } = {}) {
 console.log("HackScout production env check");
 const requiredMissing = printBlock("Required", required);
 const publishMissing = printBlock("Publish confirm (organizer email → live)", publishConfirm);
-const recommendedMissing = printBlock("Recommended", recommended, {
+printBlock("Recommended", recommended, {
   optionalEmptyOk: true,
 });
 

@@ -1,20 +1,13 @@
 #!/usr/bin/env node
 
 import "dotenv/config";
-import IORedis from "ioredis";
 import { createPostgresClient } from "./postgres.mjs";
 
 const databaseUrl = process.env.DATABASE_URL;
 const directUrl = process.env.DIRECT_URL;
-const redisUrl = process.env.REDIS_URL;
 
 if (!databaseUrl) {
   console.error("Missing DATABASE_URL.");
-  process.exit(1);
-}
-
-if (!redisUrl) {
-  console.error("Missing REDIS_URL.");
   process.exit(1);
 }
 
@@ -32,22 +25,6 @@ async function checkPostgres(label, connectionString) {
   console.log(`OK   ${label} connection query passed.`);
 }
 
-async function checkRedis(connectionString) {
-  const redis = new IORedis(connectionString, {
-    maxRetriesPerRequest: 1,
-    enableReadyCheck: true,
-  });
-
-  const response = await redis.ping();
-  await redis.quit();
-
-  if (response !== "PONG") {
-    throw new Error(`Redis ping failed (${response}).`);
-  }
-
-  console.log("OK   REDIS_URL ping returned PONG.");
-}
-
 async function run() {
   console.log("HackScout runtime dependency check");
   await checkPostgres("DATABASE_URL", databaseUrl);
@@ -56,8 +33,7 @@ async function run() {
   } else {
     console.log("WARN DIRECT_URL missing: migrate deploy may fail in production.");
   }
-  await checkRedis(redisUrl);
-  console.log("\nPass: DB and Redis connectivity checks completed.");
+  console.log("\nPass: database connectivity checks completed.");
 }
 
 run().catch((error) => {

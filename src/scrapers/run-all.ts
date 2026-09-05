@@ -1,7 +1,6 @@
 import "dotenv/config";
 import { pathToFileURL } from "node:url";
 import { prisma } from "@/lib/db";
-import type { RunAllScrapersJobResult } from "@/lib/scraper-queue";
 import { scrapeDevfolio } from "./devfolio";
 import { scrapeDevpost } from "./devpost";
 import { scrapeEventbrite } from "./eventbrite";
@@ -61,18 +60,6 @@ export interface SourceRunSummary {
   merged: number;
   errors: string[];
   stats?: ScraperResult["stats"];
-}
-
-export function toRunAllScrapersJobResult(
-  summaries: SourceRunSummary[],
-): RunAllScrapersJobResult {
-  return {
-    sources: summaries.length,
-    eventsFound: summaries.reduce((total, summary) => total + summary.eventsFound, 0),
-    inserted: summaries.reduce((total, summary) => total + summary.inserted, 0),
-    merged: summaries.reduce((total, summary) => total + summary.merged, 0),
-    failedSources: summaries.filter((summary) => summary.status === "failed").length,
-  };
 }
 
 /** Runs all source scrapers and preserves partial results if a source fails. */

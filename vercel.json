@@ -3,10 +3,6 @@
   "buildCommand": "npx prisma generate && npx prisma migrate deploy && next build",
   "crons": [
     {
-      "path": "/api/cron/scrapers",
-      "schedule": "0 0 * * *"
-    },
-    {
       "path": "/api/cron/deadline-reminders",
       "schedule": "0 3 * * *"
     },

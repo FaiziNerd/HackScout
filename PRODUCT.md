@@ -26,7 +26,7 @@ The only comprehensive, automated event aggregator specifically tuned to Pakista
 
 ## Capabilities and Constraints
 
-- **Aggregation & Ingestion**: Scrapers pull from multi-source platforms (Devfolio, Devpost, Luma, Eventbrite, Unstop, university portals) into PostgreSQL via Prisma ORM.
+- **Aggregation & Ingestion**: Scrapers pull from multi-source platforms (Devfolio, Devpost, Luma, Eventbrite, Unstop, university portals) into PostgreSQL via Prisma. Production runs once daily on GitHub Actions (`npm run scrape:all`).
 - **Geographic Focus**: Pakistan-centric taxonomy (Karachi, Lahore, Islamabad, Rawalpindi, Peshawar, Faisalabad, Multan, Quetta, Online / Nationwide).
 - **Time-sensitivity**: Strict deadline management, urgent tags (<48h left), status tracking (Upcoming, Ongoing, Passed).
 - **Authentication & Personalization**: Supabase Auth for saved events, custom deadline alerts, and community submissions.

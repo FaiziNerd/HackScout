@@ -16,8 +16,8 @@ if (!cronSecret) {
 }
 
 const base = siteUrl.replace(/\/$/, "");
+// Scrapers run via GitHub Actions (`.github/workflows/scrape-daily.yml`), not Vercel cron.
 const paths = [
-  "/api/cron/scrapers",
   "/api/cron/deadline-reminders",
   "/api/cron/weekly-digest",
 ];

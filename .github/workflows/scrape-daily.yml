@@ -1,0 +1,65 @@
+# Daily event scrape via `npm run scrape:all` (writes directly to production Postgres).
+#
+# Required repo secrets (Settings → Secrets and variables → Actions):
+#   DATABASE_URL, DIRECT_URL
+# Recommended (failure alert emails):
+#   RESEND_API_KEY, DEADLINE_EMAIL_FROM, ADMIN_EMAILS, NEXT_PUBLIC_SITE_URL
+# Optional string overrides (omit the secret to keep code defaults):
+#   FACEBOOK_PAGE_URLS, FACEBOOK_EVENT_URLS, LUMA_PAGE_URLS, LUMA_CALENDAR_SLUGS,
+#   EVENTBRITE_PAGE_URLS, EVENTBRITE_LOCATION_SLUGS, TALENTSHOWCASE_API_KEY, …
+
+name: Daily scrapers
+
+on:
+  schedule:
+    # ~00:00 UTC once per day (GitHub may delay a few minutes)
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: scrape-daily
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+
+      - name: Run all scrapers
+        run: npm run scrape:all
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          ADMIN_EMAILS: ${{ secrets.ADMIN_EMAILS }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          DEADLINE_EMAIL_FROM: ${{ secrets.DEADLINE_EMAIL_FROM }}
+          # Only pass string list overrides. Do not pass empty numeric secrets —
+          # Number("") becomes 0 and breaks page limits.
+          FACEBOOK_PAGE_URLS: ${{ secrets.FACEBOOK_PAGE_URLS }}
+          FACEBOOK_EVENT_URLS: ${{ secrets.FACEBOOK_EVENT_URLS }}
+          LUMA_PAGE_URLS: ${{ secrets.LUMA_PAGE_URLS }}
+          LUMA_CALENDAR_SLUGS: ${{ secrets.LUMA_CALENDAR_SLUGS }}
+          EVENTBRITE_PAGE_URLS: ${{ secrets.EVENTBRITE_PAGE_URLS }}
+          EVENTBRITE_LOCATION_SLUGS: ${{ secrets.EVENTBRITE_LOCATION_SLUGS }}
+          TALENTSHOWCASE_API_URL: ${{ secrets.TALENTSHOWCASE_API_URL }}
+          TALENTSHOWCASE_API_KEY: ${{ secrets.TALENTSHOWCASE_API_KEY }}

@@ -1,7 +1,7 @@
 # HackScout Production Launch Plan
 
 ## Objective
-Deploy HackScout to production with a working web app, worker, database, auth callbacks, cron jobs, and launch QA checks.
+Deploy HackScout to production with a working web app, database, auth callbacks, cron jobs, daily GitHub Actions scrapers, and launch QA checks.
 
 ## 1) Vercel Web App Deployment
 - Create/import project in Vercel from this repo.
@@ -20,7 +20,6 @@ Deploy HackScout to production with a working web app, worker, database, auth ca
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `NEXT_PUBLIC_SITE_URL` (canonical production URL)
 - `CRON_SECRET`
-- `REDIS_URL` (BullMQ Redis TCP/TLS URL)
 
 ### Recommended
 - `SUPABASE_SERVICE_ROLE_KEY`
@@ -29,12 +28,10 @@ Deploy HackScout to production with a working web app, worker, database, auth ca
 - `ADMIN_EMAILS`
 - `GROQ_API_KEY`
 
-## 3) Worker Deployment (Render or Railway)
-- Deploy a dedicated worker service from same repo.
-- Start command:
-  - `npm run worker`
-- Ensure worker env vars include DB + Redis + site URL values.
-- Verify startup logs confirm queue subscription and schedule registration.
+## 3) Daily scrapers (GitHub Actions)
+- Workflow: `.github/workflows/scrape-daily.yml` (`npm run scrape:all`)
+- Add Actions secrets: `DATABASE_URL`, `DIRECT_URL` (plus alert/mail secrets if desired)
+- Confirm a manual **Run workflow** succeeds before relying on the daily schedule
 
 ## 4) Supabase Auth Production Config
 - In Supabase Auth redirect/callback allow-list, add:
@@ -71,15 +68,13 @@ Deploy HackScout to production with a working web app, worker, database, auth ca
   - `/events`
   - `/cities/lahore` (or other city pages)
 
-## 6) Cron + Queue Verification
-- Trigger scrapers cron endpoint:
-  - `GET /api/cron/scrapers` with header `Authorization: Bearer <CRON_SECRET>`
+## 6) Cron Verification
 - Trigger deadline reminders:
-  - `GET /api/cron/deadline-reminders` with same auth header
+  - `GET /api/cron/deadline-reminders` with header `Authorization: Bearer <CRON_SECRET>`
 - Trigger weekly digest:
   - `GET /api/cron/weekly-digest` with same auth header
 - Confirm responses are `ok: true`.
-- Confirm worker logs show queue jobs processed successfully.
+- Confirm GitHub Actions **Daily scrapers** run completed successfully.
 
 ## 7) Launch QA Checks
 - `https://YOUR_DOMAIN/sitemap.xml` resolves.
@@ -98,10 +93,9 @@ Deploy HackScout to production with a working web app, worker, database, auth ca
 
 ## 8) Go-Live Sign-off
 - [ ] Vercel app healthy
-- [ ] Worker healthy
+- [ ] GitHub Actions daily scrapers configured + tested
 - [ ] Env vars complete
 - [ ] Supabase callbacks configured
 - [ ] Migrations + seed done
 - [ ] Cron endpoints authorized and passing
-- [ ] Queue processing verified
 - [ ] SEO/share/mobile QA passed
