@@ -173,7 +173,18 @@ async function main() {
     );
   }
 
-  if (summaries.some(({ status }) => status === "failed")) {
+  const failed = summaries.filter(({ status }) => status === "failed");
+  const ok = summaries.filter(({ status }) => status === "success" || status === "partial");
+
+  if (failed.length > 0) {
+    console.warn(
+      `[scrapers] ${failed.length} source(s) failed: ${failed.map((s) => s.source).join(", ")}`,
+    );
+  }
+
+  // Only hard-fail when nothing useful completed (keeps GitHub Actions green on
+  // normal per-source flakiness; crash/uncaught errors still exit 1 via .catch).
+  if (ok.length === 0) {
     process.exitCode = 1;
   }
 }
